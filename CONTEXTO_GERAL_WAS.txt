@@ -1,0 +1,247 @@
+WAS — CONTEXTO GERAL DO JOGO
+Documento de passagem para outra IA
+Atualizado em 28/10/2026
+
+======================================================================
+1. RESUMO DO PROJETO
+======================================================================
+
+WAS é um jogo narrativo de exploração e investigação. O jogador percorre cenários 2D, observa objetos e reúne pistas que ajudam o protagonista, Oliver, a reconstruir lembranças sobre a própria vida e sobre seu pai. Algumas pistas são inspecionadas em 3D, com rotação para observar frente e verso. As fases usam transições cinematográficas e flashbacks para revelar gradualmente a história.
+
+O tema central é memória, esquecimento, identidade, relação entre pai e filho e aceitação. A frase visual recorrente é “Algumas coisas a gente esquece.” O jogo trata lembranças como fragmentos: objetos e lugares evocam sensações antes de formar uma narrativa coerente.
+
+O projeto está sendo desenvolvido como jogo web e preparado para uma futura experiência mobile em React Native. O projeto está na pasta WAS da Área de Trabalho. O endereço local usado durante o desenvolvimento foi http://127.0.0.1:5173/.
+
+======================================================================
+2. CUIDADO COM INFORMAÇÕES QUE MUDARAM
+======================================================================
+
+Há divergências entre decisões antigas da conversa e o estado atual do código. A IA que continuar o trabalho deve mantê-las visíveis e pedir alinhamento antes de reescrever a história ou mudar nomes:
+
+- Em uma descrição inicial, a personagem foi chamada Zoe e descrita como médica.
+- Nas implementações, artes, sprites e roteiro mais recentes, o protagonista é Oliver, homem que usa roupa médica ciano em parte do jogo.
+- Zoe aparece em ideias de uma antiga fase escolar como colega/amiga e em mensagens no celular.
+- O código atual usa Oliver em falas, objetos e pistas. Para este documento, Oliver é o nome usado pela implementação atual, mas o nome canônico ainda merece confirmação.
+- O requisito original falava em sete fases. A tabela de fases do conteúdo tem sete arcos narrativos, mas o jogo possui oito fundos/cenários jogáveis, contando o quarto de infância e sete outros ambientes. Assim, não se deve chamar os oito fundos de “sete fases” sem explicar essa diferença.
+- O conteúdo inicial dizia que as escolhas seriam decididas depois. Desde então, foram planejados/implementados pontos de escolha na cozinha e no hospital, mas o alcance narrativo dessas escolhas é limitado e ainda pode mudar.
+- A pessoa usuária informou que o final deve usar um epílogo em vídeo que já foi feito. No código conferido, o vídeo final ainda é um espaço reservado; falta adicioná-lo ao projeto e ligá-lo ao encerramento.
+
+======================================================================
+3. PREMISSA E TEMAS DA HISTÓRIA
+======================================================================
+
+Oliver investiga lembranças que parecem desconexas. O fio condutor é sua relação com o pai, que era médico/pesquisador e estudava o cérebro, a memória e uma doença neurológica. A história liga o interesse de Oliver pela medicina, sua vida escolar, sua relação com outras pessoas, o laboratório do pai e a experiência no hospital.
+
+A lembrança inicial entre Oliver criança e o pai introduz a ideia de que o cérebro não consegue guardar tudo. O pai explica que algumas coisas importantes também podem ser esquecidas. Essa conversa funciona como chave temática para o restante do jogo.
+
+A progressão deve levar da investigação de objetos concretos a uma compreensão emocional: a memória pode ser incompleta sem que os laços e sentimentos deixem de ter sido reais. O campo no final representa um espaço de reflexão e aceitação. O fechamento previsto é o epílogo em vídeo criado pela equipe.
+
+O tempo é narrativo: relógios e horários funcionam como motivos e pistas, mas a história não precisa obedecer a uma cronologia em tempo real. 04:00 é um horário recorrente, ligado a noites de estudo e ao laboratório.
+
+======================================================================
+4. PERSONAGENS
+======================================================================
+
+OLIVER
+Protagonista e personagem controlado pelo jogador. Na infância, demonstra curiosidade sobre o cérebro e conversa com o pai. Em outros períodos, estuda, tenta entender o que quer ser e enfrenta dificuldades de memória. A arte do personagem usa roupa médica/scrubs em tom ciano e sprites direcionais para exploração.
+
+PAI DE OLIVER
+Médico e pesquisador. É uma figura afetiva importante e está ligado aos estudos sobre cérebro e doença neurológica. A narrativa sugere que ele investigava a própria condição em segredo e adiava contar a Oliver, possivelmente para protegê-lo. Há uma fotografia antiga dos dois abraçados; o rosto do pai aparece desfocado para preservar o mistério/evocar memória incompleta.
+
+CONSCIÊNCIA
+Voz/personagem simbólico que conversa com Oliver durante a reconstrução das lembranças, especialmente na parte final. Representa o diálogo interno e ajuda Oliver a olhar para o que viveu.
+
+ZOE E OUTROS COLEGAS
+Zoe, Michael e colegas aparecem em ideias de roteiro escolar ainda pendentes. A relação exata de Zoe com Oliver e o status canônico desses personagens precisam ser definidos pela equipe.
+
+======================================================================
+5. FLUXO NARRATIVO E CENÁRIOS
+======================================================================
+
+A sequência abaixo combina os fundos presentes no jogo com o arco de conteúdo atual. O código contém oito cenários: infância + cenario-02 a cenario-08. “Flashback” é uma sequência narrativa entre ambientes, não necessariamente um cenário jogável separado.
+
+ABERTURA — ANIMAÇÃO DO CÉREBRO / VHS
+Storyboard desejado: dois neurônios ou regiões cerebrais surgem em cantos opostos; a câmera aproxima enquanto se conectam; a conexão produz um clarão/raio; há uma pausa e a tela escurece; uma abertura/ruído de VHS inicia uma explicação visual sobre o cérebro, com clima de programa educativo antigo; a câmera recua para revelar Oliver e a logo WAS; termina com frase marcante e começa o jogo. A abertura tem uma animação/vídeo de capa configurada no menu, com fade e opção de pular. A sequência cerebral faz parte do roteiro de abertura, mas conferir a implementação e assets antes de prometer cada tomada específica.
+
+AMBIENTE 1 — QUARTO DA INFÂNCIA (infancia)
+Arte quente, ilustrada, contornos escuros e perspectiva de quarto. O jogador explora o ambiente e investiga três objetos essenciais:
+1. Fotografia antiga de Oliver criança com o pai. O pai aparece com o rosto desfocado. No verso: “Ele ficaria feliz.”
+2. Relógio de presente; no verso há a dedicatória: “Para Oliver — 18 anos. Te amo, meu filho.”
+3. Desenho infantil de cérebro, com a frase “Algumas coisas a gente esquece.”
+
+A ordem de conexão da memória é pessoa/fotografia, vínculo/relógio, assunto/desenho. Depois das três evidências, ocorre a conversa de abertura entre Oliver criança e o pai. Ao concluir essa lembrança, Oliver deve caminhar até a porta; a tela fica preta, inicia-se o flashback e abre-se o próximo ambiente. Esse fluxo pela porta foi solicitado explicitamente e está ligado ao evento de porta no código.
+
+AMBIENTE 2 — LABORATÓRIO DE AULA / ESCOLA ÀS 04:00 (cenario-02)
+No código atual, o fundo é chamado “Laboratório de aula · 04:00”. O objetivo é descobrir por que Oliver está estudando tão tarde. Três pistas de contexto são acionadas quando o personagem se aproxima: lâmina no microscópio, anotações incompletas com a palavra “memória” e relógio marcando quatro da manhã. As mensagens aparecem no alto como texto contextual e somem depois de alguns segundos; não deveriam exigir marcadores circulares no chão. A conclusão pode abrir flashback escolar.
+
+Ideia visual anterior: separar corredor e sala de aula; o corredor deve revelar-se conforme Oliver anda e equivaler a aproximadamente duas telas do desenho. Remover estante de livros e lousas verdes do corredor. Para a sala, manter elementos centrais como mesas e cadeiras azuis; remover carteiras marrons de sala tradicional. Confirmar se esses elementos já foram incorporados ao fundo atual.
+
+AMBIENTE 3 — SALA DE ESTAR (cenario-03)
+A investigação mostra vestígios de rotina e ausência. Pistas atuais: caneca esquecida, controle remoto e relógio/despertador marcando 04:00. O texto sugere que Oliver começa tarefas e esquece por que entrou na sala; a TV permanece em uma tela silenciosa; o relógio conecta a casa às noites sem dormir.
+
+AMBIENTE 4 — PAREDE DE QUADROS / FOTOGRAFIAS (cenario-04)
+As imagens e anotações formam um fio de memória. Pistas: fotografia antiga com rosto familiar, bilhete “perguntar ao pai” e desenho anatômico que remete aos estudos do pai e ao laboratório.
+
+AMBIENTE 5 — COZINHA (cenario-05)
+Pequenos detalhes revelam uma ausência e corrigem a memória de Oliver. Pistas atuais: fotografia de família na geladeira, bilhete do pai “Volto tarde do laboratório.” e mesa posta para duas pessoas. Ao avançar, há um desafio/decisão de relacionamento. A escolha deve permanecer coerente com o tom e consequências narrativas ainda precisam ser definidas.
+
+AMBIENTE 6 — LABORATÓRIO DO PAI (cenario-06)
+É o lugar onde o pai estudava a doença neurológica e seus efeitos sobre memória. Pistas atuais: anotações na escrivaninha com a frase “Ainda não contei ao Oliver”; microscópio e notas sobre a progressão da doença; mural de exames conectados, indicando que o pai investigava a própria condição em segredo. O flashback ocorre às 04:00. O diálogo atual inclui o pai perguntando sobre a doença e Oliver dizendo que queria ter tido mais tempo antes de contar. O espaço deve usar tons neutros/terrosos, sem verdes saturados que destoem do laboratório, com atmosfera de madrugada.
+
+AMBIENTE 7 — HOSPITAL (cenario-07)
+Oliver tenta entender uma lembrança fragmentada de cirurgia. Pistas atuais: monitor clínico estável, prontuário que confirma que o procedimento terminou e porta da ala, sugerindo que alguém espera do outro lado. Há um puzzle de sequência que deve ser resolvido como exames → cirurgia → despertar. Depois, o flashback/conversa trata do pai, do que aconteceu e da presença. O texto atual ainda não fecha todos os fatos médicos e emocionais; não inventar diagnóstico, desfecho do pai ou cronologia sem validação.
+
+AMBIENTE 8 — CAMPO / ENCERRAMENTO (cenario-08)
+Espaço aberto, contemplativo, depois da chuva, com pegadas, flor na grama e luz no horizonte. A consciência diz “Você voltou”; Oliver responde “Dessa vez, eu lembro.” A memória se completa simbolicamente. Esboços da equipe descrevem Oliver caminhando sozinho pelo campo, conversando com a consciência, respondendo perguntas e tendo um momento emocional. Há uma ideia de câmera aproximando-se de Oliver e depois revelando pai e filho juntos em tempos diferentes. O final deve seguir para o vídeo de epílogo produzido pela equipe, que ainda precisa ser integrado ao projeto.
+
+======================================================================
+6. IDEIA ESCOLAR ADICIONAL AINDA NÃO CONFIRMADA
+======================================================================
+
+Em uma mensagem de roteiro, foi descrita uma sequência escolar mais detalhada. Ela não aparece nas pistas do código atual e deve ser tratada como proposta pendente, não como funcionalidade pronta:
+
+- Uma cadeira rabiscada com “O + Z” e desenhos sob a mesa.
+- Trabalhos espalhados; duas redações com o tema “O que você quer ser quando crescer?”. Na primeira, escrita infantil irregular: Oliver queria ser médico como o pai. Em outra, mais tarde, diz não saber o que quer fazer.
+- Armários com nomes como Oliver, Zoe e Michael.
+- Uniforme gasto no chão e provas com notas altas em nome de Oliver.
+- Celular antigo com a tela quebrada, ainda mostrando as horas. Mensagens: Zoe pergunta se ele levou a marmita e o trabalho; um amigo pede para olhar algo no armário de Zoe.
+- O celular precisa de senha. Uma data encontrada num caderno dentro de uma bolsa no chão — 17/09/1990 — vira o código 17091990.
+- No armário de Zoe, Oliver encontra uma avaliação de anatomia com nota baixa; isso desbloqueia um flashback.
+
+Antes de implementar, definir em qual ambiente/fase essa sequência entra, se Zoe é colega ou personagem principal e como essa data se encaixa na cronologia.
+
+======================================================================
+7. MECÂNICAS DE JOGO
+======================================================================
+
+EXPLORAÇÃO
+- Movimento 2D nos eixos horizontais e de profundidade: esquerda, direita, cima e baixo.
+- A perspectiva muda levemente com a profundidade; o personagem não deve encolher demais.
+- A câmera enquadra uma parte do cenário e revela o restante ao andar; evitar faixas pretas e proporções que cortem excessivamente o cenário.
+- O personagem deve andar apenas em superfícies que parecem chão. Não atravessar paredes, móveis, cama, mesas, bolsa ou objetos no chão.
+- O projeto tem polígonos de chão e obstáculos, movimento com colisão e busca de caminho para cliques no chão.
+- Sprites incluem frente, costas, lados e animações de caminhada; parado deve ter respiração/movimento sutil.
+
+INTERAÇÃO
+- O botão principal de interação é E no teclado; há suporte a toque/controles mobile planejado/implementado em parte.
+- Aproximar-se de pistas habilita “Investigar · E”. Objetos 3D podem ser rotacionados para ver frente e verso.
+- Na primeira fase, os itens principais são fotografia, relógio e desenho. O jogador examina lados específicos para revelar pistas.
+- As pistas das fases podem ser exibidas como mensagens contextuais no alto e registradas no diário.
+- O diário/jornal de memórias apresenta pistas coletadas e objetivo atual.
+- A passagem normal exige concluir as três investigações do ambiente. O avanço seguinte pode iniciar um flashback, depois carregar a próxima cena.
+
+QUICK TIME EVENT / SONOLÊNCIA
+- Durante exploração ativa, após cerca de 60 segundos começa um evento de sonolência: tela escurece e o jogador precisa apertar E repetidamente para “respirar”/permanecer acordado.
+- Há aproximadamente 12 segundos para recuperar o fôlego. Sem ação suficiente, ocorre fim de jogo e opção para reiniciar.
+- Manter a tecla pressionada não deve substituir cliques repetidos.
+- O contador pausa em menus, inspeções e sequências narrativas.
+
+FLASHBACKS E TRANSIÇÕES
+- Fade para preto entre ambientes e lembranças.
+- Flashbacks são sequências de telas/falas, com estilo VHS/ruído quando apropriado.
+- A ordem de cenas e a saída após os quebra-cabeças devem levar automaticamente ao próximo ambiente, sem depender do modo Admin.
+
+PUZZLES/ESCOLHAS
+- Primeira fase: associar pessoa, vínculo e assunto por fotografia, relógio e desenho.
+- Hospital: reconstruir exames → cirurgia → despertar.
+- Cozinha: escolha de relacionamento planejada/implementada parcialmente.
+- Os demais puzzles e consequências precisam ser definidos sem contradizer a narrativa.
+
+======================================================================
+8. MENU E MODO ADMIN
+======================================================================
+
+O menu tem opções de iniciar, continuar, preferências e acesso administrativo. A abertura em vídeo aparece antes do menu, com fade in/fade out e possibilidade de pular. Preferências incluem controles de acessibilidade, como texto ampliado e movimento reduzido.
+
+O modo Admin abre com senha 1807 e deve oferecer botões para saltar livremente entre ambientes/fases, útil para testar cenas. É uma ferramenta local de desenvolvimento, não um sistema de segurança: a senha está no cliente e não deve ser considerada proteção real.
+
+======================================================================
+9. DIREÇÃO DE ARTE E ASSETS
+======================================================================
+
+- Estilo ilustrado 2D, contorno escuro, formas desenhadas e aparência de cenário feito à mão; preservar o traço das artes enviadas.
+- Paleta homogênea, quente e terrosa nos cenários de memória: bege, madeira, marrom, terracota, oliva discreto e azul/ciano do protagonista.
+- Laboratório e corredor: tons neutros/terrosos, iluminação fria ou de madrugada quando indicado; evitar verde vivo sem motivação.
+- Quarto: luz quente e acolhedora, com contraste entre lembrança infantil e mistério.
+- Campo final: referência de luz natural de pôr do sol e colinas verdes, conforme imagens enviadas.
+- Elementos importantes da primeira fase: foto na cama, relógio sobre a mesa de estudo (não ao lado do abajur), desenho no chão e bolsa embaixo da mesa, fora da rota do personagem. Remover banquinho transparente e qualquer resto fantasma da posição antiga.
+- Objetos 3D devem conservar a linguagem visual dos desenhos: relógio com frente e verso; fotografia Polaroid frente e verso, com pai desfocado; folha vertical maior contendo o desenho de cérebro em traço de lápis e texto legível no verso. O desenho do cérebro deve estar presente — não somente a frase.
+- Inspeção 3D construída com Three.js/React Three Fiber; algumas formas e texturas são criadas proceduralmente no próprio código.
+
+======================================================================
+10. STACK E ORGANIZAÇÃO TÉCNICA
+======================================================================
+
+Monorepo npm workspaces:
+- apps/web: aplicação React + TypeScript + Vite.
+- Phaser 3.90: cenas e exploração 2D.
+- Three.js + React Three Fiber: inspeção 3D de objetos.
+- Zustand: estado de jogo e progresso.
+- Howler: áudio.
+- packages/game-content: nomes das fases, falas, pistas e objetivos narrativos.
+- packages/game-core: regras puras de progresso, coleta de pistas, desbloqueio e puzzles.
+- packages/design-tokens: tokens visuais compartilhados.
+- apps/mobile: espaço/protótipo da versão mobile em React Native; confirmar seu estado antes de assumir paridade funcional.
+
+Diretórios úteis:
+- apps/web/src/pages: menu, HUD, diário, flashbacks, eventos e telas.
+- apps/web/src/game/scenes: cenas Phaser.
+- apps/web/src/game/systems/navigation.ts: chão, obstáculos, movimento e pathfinding.
+- apps/web/src/game/systems/drowsiness.ts: lógica do evento de sonolência.
+- apps/web/src/game/backgrounds.ts: lista dos oito fundos e dimensões.
+- apps/web/src/inspection/ObjectModels.tsx: modelos/texturas 3D inspecionáveis.
+- packages/game-content/src/index.ts: fases, roteiro atual e objetivos/pistas por cena.
+- packages/game-core/src/index.ts: regras de progressão e save.
+- apps/web/public/assets: fundos, sprites, vídeo e imagens de inspeção.
+
+Comandos comuns na raiz do projeto:
+- npm run dev — servidor local.
+- npm run build — build do web.
+- npm run typecheck — checagem de tipos dos workspaces.
+- npm test — testes automatizados existentes.
+- npm run mobile — inicialização do workspace mobile, se configurado.
+
+======================================================================
+11. PROGRESSO ATUAL E PENDÊNCIAS CONHECIDAS
+======================================================================
+
+Presente no código observado:
+- Oito fundos listados: quarto, laboratório de aula, sala de estar, parede de quadros, cozinha, laboratório do pai, hospital e campo.
+- Pistas e objetivos definidos no conteúdo para as sete cenas posteriores ao quarto.
+- Coleta contextual automática para pistas de texto no laboratório de aula; aproximação e tecla E para pistas interativas das outras cenas.
+- Progressão normal bloqueada até completar as três pistas do ambiente; Admin pode visitar livremente.
+- Intro, menu, preferências, save/checkpoint, diário e flashback com sequências de texto.
+- Puzzle de conexão das três pistas principais do quarto.
+- Transição da porta do quarto para o flashback escolar e próxima cena.
+- Puzzle hospitalar com ordem validada exames|cirurgia|acordar.
+- Navegação com polígonos de chão, obstáculos, colisões e busca de caminho.
+- Evento de sonolência com estado “calm / breathing / lost”.
+- Senha Admin 1807 e painel de fases.
+- Modelos 3D de relógio, fotografia e folha de cérebro são gerados/compostos no código.
+
+Verificar/definir antes de considerar concluído:
+- Canon do protagonista: Zoe ou Oliver; profissão e relação exata com medicina.
+- Se a estrutura oficial terá sete fases ou oito ambientes jogáveis.
+- A sequência escolar detalhada do celular, bolsa, data 17/09/1990 e armário de Zoe ainda não está no conteúdo atual.
+- Como o pai adoeceu, qual doença, se ele morre, quando ocorre a cirurgia e qual é exatamente o papel médico de Oliver. Não preencher lacunas por conta própria.
+- Integrar o vídeo de epílogo final informado pela equipe: o código ainda mostra uma mensagem de espaço reservado.
+- Conferir se corredor separado, sala com mesas/cadeiras azuis, iluminação atualizada e interações de todas as cenas correspondem às últimas artes recebidas.
+- Completar flashbacks e consequências significativas das escolhas; não confundir frases placeholder atuais com roteiro final.
+- Conferir andamento da versão React Native; a arquitetura compartilhada é desejada, mas o projeto web Phaser não se torna mobile automaticamente.
+- Revisar acessibilidade e controles touch em telas pequenas.
+- O usuário mencionou que imagens próprias de elementos 3D serão enviadas para substituir/aprimorar modelos atuais.
+
+======================================================================
+12. ORIENTAÇÃO PARA A IA QUE VAI CONTINUAR
+======================================================================
+
+1. Leia o código e os assets antes de afirmar que algo já está implementado.
+2. Preserve o estilo e a geometria das artes originais; mudanças de iluminação não devem redesenhar objetos sem pedido.
+3. Mantenha os fatos confirmados separados de propostas de storyboard e placeholders.
+4. Não invente diagnóstico médico, cronologia ou desfecho do pai.
+5. Mantenha continuidade entre pistas, lembranças, flashbacks e desbloqueio da fase seguinte.
+6. Em movimento, valide visualmente colisões com pés/personagem, móveis, paredes e objetos do chão.
+7. Para imagens de fase, preservar a perspectiva 2D com profundidade jogável e câmera que revela o cenário.
+8. Lembrar que o final pretendido inclui um vídeo já produzido pela equipe, mas sua integração ainda está pendente no código observado.
+
+FIM DO CONTEXTO

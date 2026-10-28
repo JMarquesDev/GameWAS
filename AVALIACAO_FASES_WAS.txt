@@ -1,0 +1,114 @@
+WAS — AVALIAÇÃO DO ROTEIRO E PLANO DE AJUSTES
+28/10/2026
+Fonte: ROTEIRO_FASES_RECEBIDO.txt (texto enviado pela equipe).
+
+ALTERAÇÕES APLICADAS NESTA ETAPA
+- Campo ocupa toda a área do jogo com uma única imagem em cover, sem cópia desfocada atrás. A imagem mantém proporção; telas de proporção diferente recortam as laterais ou parte da altura. Oliver permanece centralizado. Não é necessário forçar o modo de tela cheia do navegador.
+- Fade lento e narração provisória permanecem.
+- O relógio de pulso já existe sobre a escrivaninha do quarto. O marcador foi alinhado ao relógio visível.
+- Corrigido destino de aproximação do relógio: antes era bloqueado pela área da bolsa; agora fica no piso à frente da mesa. Verificado caminho desde o ponto de entrada do quarto.
+- Marcadores de fotografia e desenho alinhados aos objetos visíveis na cama e no chão.
+
+O QUE O NOVO ROTEIRO DEFINE
+- Sete fases narrativas: infância, escola, faculdade, apartamento/cozinha, laboratório do pai, hospital e campo.
+- Uma etapa final adicional pergunta “VOCÊ QUER LEMBRAR”. Sim: vídeo da vida até a morte. Não: tela branca. Créditos devem ser conectados a esse fluxo; definir duração e saída da tela branca.
+- As escolhas intermediárias alteram o conteúdo do flashback local, não o desenvolvimento das fases.
+- Zoe é a namorada de Oliver. O roteiro diz que se conheceram na faculdade, mas já prevê mensagens dela no celular da fase escolar. Alinhar essa cronologia.
+- Michael participa do flashback da faculdade.
+- Horários explícitos: escola às 06:00; faculdade às 05:00. Isso substitui a atual identificação de laboratório de aula às 04:00 para essas etapas.
+- A chapa do cérebro deve mostrar progresso acumulado entre memórias. Tratar a divisão em regiões como representação narrativa; evitar afirmar que cada fase da vida é armazenada em uma região cerebral exclusiva.
+- Revelação final: lápide de Oliver e, ao lado, a do pai com morte anos depois. Não antecipar essa revelação com textos genéricos de despedida que mudem seu sentido.
+
+FASE 1 — QUARTO
+Objetos: brinquedos, livros de medicina, relógio adulto, desenho de cérebro no chão. A fotografia atual pode continuar como lembrança complementar, se desejado.
+Posicionamento: relógio sobre a escrivaninha, livros na prateleira/mesa, desenho em espaço livre no chão, brinquedos próximos ao tapete. Bolsa sob a mesa; sem criar obstáculo invisível fora de sua silhueta.
+Navegação: faixa livre entre cama, tapete, escrivaninha e porta. O personagem deve parar no chão diante da mesa, sem tentar alcançar o centro físico do objeto.
+Divergência de fluxo: o novo texto inicia o flashback ao pegar o desenho; a versão atual exige conectar três pistas e depois usa a porta. Proposta: manter pistas opcionais de contexto, usar o desenho como gatilho final da memória e adotar a sequência flashback → chapa cerebral → fase 2 conforme o roteiro novo. Definir se a ida à porta solicitada anteriormente será mantida como encenação após a chapa.
+Não aplicado ainda: mudança do gatilho narrativo.
+
+FASE 2 — ESCOLA
+Substituir o conteúdo atual de microscópio/anotações às 04:00 por pistas escolares.
+- Redações e provas sobre carteiras ou em um conjunto de folhas caídas identificável.
+- Celular sobre uma carteira acessível.
+- Bolsa caída ao lado de uma carteira, sem bloquear o corredor; caderno dentro dela.
+- Uniforme sobre cadeira ou no chão junto à bolsa, de acordo com a arte aprovada.
+- Relógio da sala às 06:00, na parede, com inspeção visual a partir do chão.
+- Prova de anatomia dentro do armário, desbloqueada após a mensagem do amigo.
+Dependências: explorar pistas → abrir bolsa/caderno → descobrir data → desbloquear celular → ler mensagens → abrir armário → prova de anatomia → flashback.
+A senha 17091990 foi proposta anteriormente. O novo documento só diz “data de nascimento da Zoe”; manter a data configurável até confirmar cronologia.
+Navegação: corredor central e acessos laterais às carteiras; armário com espaço frontal; posição de entrada fora de móveis. Se houver corredor separado, tratá-lo como parte da fase escolar, sem aumentar a contagem narrativa.
+
+FASE 3 — FACULDADE / LABORATÓRIO
+Usar laboratório de aula como ambiente universitário, em vez da atual sala de estar nesta posição.
+- Relatórios sobre mesa de estudo.
+- Chapas de raio X no painel/negatoscópio.
+- Remédios para dor de cabeça sobre a mesa do protagonista.
+- Relógio de parede às 05:00.
+Cada item deve possuir uma posição visual e um ponto separado de aproximação no piso. Evitar colocar três círculos alinhados no corredor central, como acontece com as pistas atuais do laboratório de aula.
+Flashback com Michael: relato de ter passado mal e opções locais de resposta; não mudar a próxima fase.
+
+FASE 4 — COZINHA / APARTAMENTO
+A cozinha existente é aproveitável; sala de estar e parede de quadros podem ser ambientes opcionais do apartamento, sem contar como fases adicionais.
+- Post-its na geladeira, perto da saída ou acima da bancada, com lembretes cotidianos.
+- Notebook na bancada, acessível por um lado livre da ilha; abrir uma interface com abas de e-mail e conversa com Zoe.
+- Mochila perto da saída, caso apareça na arte, sem bloquear a porta.
+- Inspecionar o notebook não exige que Oliver fique sobre a bancada.
+A inspeção geométrica encontrou o ponto atual de “mesa posta” dentro da área bloqueada da ilha/banqueta. Isso não prova que a interação esteja totalmente inacessível, pois há um raio de alcance, mas exige um ponto de aproximação explícito no chão.
+Substituir as pistas atuais sobre ausência do pai pelo conteúdo de lembretes, trabalho atrasado e relacionamento.
+Flashback: ligação com o pai, ouvindo apenas Oliver. Áudio final ainda precisa ser fornecido/produzido; legendas devem acompanhar.
+
+FASE 5 — LABORATÓRIO DO PAI
+- Exames e pasta identificada com o nome de Oliver sobre bancada acessível.
+- Computador na escrivaninha, com páginas fictícias de pesquisa coerentes com a doença definida no roteiro.
+- Anotações ao lado da pasta, livros na estante, modelos anatômicos em bancada secundária.
+- Separar pistas entre escrivaninha, bancada e painel; não concentrar tudo no microscópio.
+Navegação: contornar a bancada central; bloquear cadeira, lixeira e armários pelos seus pontos de contato no chão; aplicar oclusão quando Oliver passa atrás.
+Correção narrativa necessária: o código atual afirma que o pai investigava a própria doença. O novo roteiro conduz à doença de Oliver. Alinhar textos e falas antes de criar assets com diagnóstico escrito. O diagnóstico específico não está definido no arquivo.
+
+FASE 6 — HOSPITAL
+- Entrada ao lado da maca, com espaço para levantar.
+- Pulseira examinada no próprio braço/inventário; não usar marcador no chão para ela.
+- Ficha médica, remédios e exames sobre mesa de apoio móvel.
+- Mochila no chão ao lado da maca e fora do corredor; celular encontrado dentro dela.
+- Exame dobrado com data discrepante e cirurgia concluída como pista de revelação.
+- Porta acessível depois das pistas/flashback; deslocamento até a porta conclui a transição para o campo.
+Rever posição atual do marcador do monitor: ele deve coincidir com o monitor desenhado, e o alcance deve partir de um local livre ao lado da cama.
+O puzzle atual de ordenar exames/cirurgia/despertar não aparece no novo roteiro: sugerido torná-lo opcional ou substituí-lo pela inspeção do exame dobrado.
+Luzes piscando precisam respeitar a opção de movimento reduzido e ter efeito suave.
+
+FASE 7 — CAMPO
+A orientação mais recente na conversa define uma visão estática com Oliver de costas e narração. O arquivo descreve caminhada com a consciência. Proposta de conciliação: manter o enquadramento estático solicitado e apresentar a consciência como voz; opções de resposta aparecem apenas em momentos narrativos.
+A revelação das lápides pode ocorrer em uma segunda arte/corte de câmera, após o diálogo, sem voltar a exploração livre nem marcadores.
+Não inventar datas nas lápides: usar a cronologia que a equipe aprovar.
+Finalizar com chapa cerebral completa e transição para “VOCÊ QUER LEMBRAR”. A narração provisória atual ainda não implementa essas escolhas ou a revelação das lápides.
+
+PADRÃO DE INTERAÇÃO PARA TODAS AS FASES
+1. Objeto visível ou sprite com aparência correspondente ao modelo da inspeção.
+2. Área clicável sobre a silhueta do item, não um círculo genérico distante.
+3. Ponto de aproximação separado, sempre no chão alcançável.
+4. Alcance limitado e, quando necessário, restrição de lado para não investigar através de paredes/bancadas.
+5. Caminho contornando obstáculos; largura considerando os pés do personagem.
+6. Ordem de profundidade baseada no contato com o chão; máscaras de oclusão refeitas quando a arte muda.
+7. Contexto decorativo em legenda temporária; pistas essenciais têm inspeção e registro persistente.
+8. Dados separados para cenário, objeto, modelo 3D, pista e condição de desbloqueio.
+
+PROBLEMAS GERAIS IDENTIFICADOS
+- Sete fases do roteiro não correspondem às oito cenas listadas hoje. Reorganizar por IDs narrativos estáveis; migrar saves antigos ao alterar a ordem.
+- Atualmente a escolha do flashback usa em vários casos a fase de destino, não a fase que acabou. O roteiro pede a lembrança da fase concluída antes da chapa e do próximo ambiente. Centralizar esse fluxo para evitar flashback errado.
+- Regras atuais exigem três pistas em todos os ambientes. Escola e hospital precisam de listas e dependências próprias, com pistas obrigatórias diferentes.
+- A chapa cerebral acumulativa precisa de um estado de progresso e reprodução própria; texto com brilho não equivale ao vídeo desejado.
+- Os pontos do laboratório do pai já separam posição visual e aproximação; ampliar esse padrão às demais fases.
+- Coordenadas de interação e chão usam referência 960x540, enquanto artes têm proporções diferentes. Continuar aplicando a mesma transformação a itens, colisões e máscaras para evitar desalinhamentos.
+- Conclusão narrativa e interface devem pausar o QTE de sono, inclusive inspeção do celular, leitura longa e escolhas.
+
+ORDEM PROPOSTA PARA IMPLEMENTAR
+1. Consolidar sete fases e gatilhos de saída, mantendo corredor/sala como subambientes se necessários.
+2. Fechar quarto: objeto visível, inspeção, navegação e decisão sobre desenho/porta.
+3. Construir escola completa, incluindo assets, posições e puzzle do celular/armário.
+4. Adaptar laboratório universitário e relógio às 05:00.
+5. Cozinha com notebook e mensagens; depois laboratório do pai com pasta/exames.
+6. Hospital e transição pela porta.
+7. Diálogo do campo, revelação, chapa completa, escolha final e vídeo/créditos.
+8. Revisar cada fase com teclado, clique e toque, em telas largas e pequenas, sem depender do Admin para concluir.
+
+Esta etapa aplicou somente os ajustes descritos no início. O restante é proposta de revisão baseada no roteiro recebido, não uma lista de funcionalidades já concluídas.

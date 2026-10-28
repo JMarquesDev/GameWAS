@@ -1,0 +1,14 @@
+Campo final — 28/10/2026
+
+Arte: apps/web/public/assets/backgrounds/cena-08-campo-final-v3.png
+Método: ferramenta integrada image_gen (edição com duas referências).
+Referências: cena-08-campo-v2.png e oliver-back-v1.png.
+Prompt utilizado:
+Use case: compositing. Edit image 1, the wide illustrated field, into a final static cinematic background for WAS. Preserve the existing field landscape, hand-drawn linework, blue sky, golden clouds, sun and grasses and panoramic aspect ratio. Insert exactly ONE Oliver from image 2, using the first standing still back-view pose as identity reference: brown curly short hair, cyan medical scrubs, arms relaxed by his sides. He stands centered looking toward the horizon, small enough to preserve the overall sweeping landscape (head to hidden feet roughly 38 percent image height); grass naturally obscures lower legs. Match the existing field's golden light and illustrated texture so he is integrated rather than a pasted sprite. Entire figure seen from behind, contemplative posture, no walking. No other people, no text, UI, markers or extra props. Output one clean panoramic field composition.
+
+Implementação: FieldFinale.tsx substitui o canvas Phaser no cenario-08.
+Fade: 4 segundos após carregamento da imagem; texto/voz começam após 4,5 segundos.
+A cena não tem exploração, marcadores, diário ou evento de sonolência.
+Pausa e acesso ao painel Admin continuam disponíveis. Ao concluir a narração, aparece Concluir história.
+Voz: síntese do navegador em pt-BR, respeitando volume. Legendas funcionam sem voz disponível.
+Texto provisório está em FieldFinale.tsx. Substituir por roteiro/gravação aprovados futuramente.
