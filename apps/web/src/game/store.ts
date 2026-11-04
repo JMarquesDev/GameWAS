@@ -29,9 +29,21 @@ export const useGameStore = create<{
   inspect: (id: ObjectId | null) => void; collect: (id: ObjectId) => void;
   collectPhaseClue: (scene: string, id: string) => void; recordChoice: (scene: string, choice: string) => void; recover: () => void; reset: () => void;
   selectSlot: (slot: number) => void; startSlot: (slot: number) => void;
+  deleteSlot: (slot: number) => boolean;
 }>((set) => ({
   progress: load(0).progress, inspecting: null, session: load(0).session, activeSlot: 0, slots: summaries(), paused: false, touch: { x: 0, y: 0 }, unread: 0, notice: '', saveFailed: false,
   setPaused: paused => set({ paused, touch: { x: 0, y: 0 } }), setTouch: touch => set({ touch }),
+  deleteSlot: slot => {
+    if (!Number.isInteger(slot) || slot < 0 || slot >= slotCount) return false;
+    // Empty records prevent legacy saves from being imported again after deletion.
+    const progress = initialProgress();
+    const session = freshSession();
+    if (!writeSlot(slot, progress, session)) { set({ saveFailed: true }); return false; }
+    set(state => ({ slots: summaries(), saveFailed: false,
+      ...(state.activeSlot === slot ? { progress, session, inspecting: null, unread: 0, notice: '', touch: { x: 0, y: 0 } } : {}),
+    }));
+    return true;
+  },
   notify: notice => set({ notice }), readJournal: () => set({ unread: 0 }),
   checkpoint: (scene, position) => set(state => {
     const session = { ...state.session, scene, savedAt: Date.now(), positions: position ? { ...state.session.positions, [scene]: { ...position } } : state.session.positions };

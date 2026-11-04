@@ -25,9 +25,15 @@ export const openingMemory = [
   ['Pai', 'Às vezes, até elas.'],
 ] as const;
 
-export type FlashbackKind = 'opening' | 'brain' | 'school' | 'friend' | 'apartment' | 'father' | 'relationship' | 'hospital' | 'field';
+export type FlashbackKind = 'childhood' | 'opening' | 'brain' | 'school' | 'friend' | 'apartment' | 'father' | 'relationship' | 'hospital' | 'field';
 export type FlashbackStep = { kind: 'title' | 'scene' | 'brain' | 'vhs' | 'dialogue' | 'choice'; speaker?: string; text: string; accent?: string };
 export const flashbacks: Record<FlashbackKind, FlashbackStep[]> = {
+  childhood: [
+    { kind: 'scene', text: 'O papel da escola traz de volta uma tarde no quarto.' },
+    { kind: 'dialogue', speaker: 'Oliver', text: 'Pai, como é que a gente guarda uma lembrança?' },
+    { kind: 'dialogue', speaker: 'Pai', text: 'Me mostra o que você desenhou. Vamos olhar juntos.' },
+    { kind: 'scene', text: 'Oliver reconhece a mão do pai sobre a folha. Anos depois, ele voltaria a procurar respostas num laboratório.' },
+  ],
   opening: [
     { kind: 'title', text: 'WAS', accent: 'UMA HISTÓRIA SOBRE O QUE FICA' },
     { kind: 'brain', text: 'Duas regiões se aproximam. Uma lembrança tenta se formar.' },
@@ -43,7 +49,7 @@ export const flashbacks: Record<FlashbackKind, FlashbackStep[]> = {
     { kind: 'scene', text: 'Uma redação da escola · anos atrás' },
     { kind: 'dialogue', speaker: 'Pai', text: 'Você escreveu que quer ser médico como eu. É isso mesmo que você quer?' },
     { kind: 'dialogue', speaker: 'Oliver', text: 'A resposta dele volta junto com a lembrança daquela conversa.' },
-    { kind: 'brain', text: 'A lembrança fica registrada; a escolha muda apenas o tom desse flashback.' },
+    { kind: 'brain', text: 'A pergunta do pai permanece, mesmo depois de tantos anos.' },
   ],
   friend: [
     { kind: 'scene', text: 'Faculdade · uma semana antes' },
@@ -53,14 +59,14 @@ export const flashbacks: Record<FlashbackKind, FlashbackStep[]> = {
   ],
   apartment: [
     { kind: 'scene', text: 'Uma ligação com o pai · apartamento' },
-    { kind: 'dialogue', speaker: 'Oliver', text: 'Eu vi os exames. Sei que você estava tentando entender o que está acontecendo comigo.' },
-    { kind: 'dialogue', speaker: 'Oliver', text: 'Eu queria ter ouvido isso de você, não encontrado em anotações.' },
+    { kind: 'dialogue', speaker: 'Oliver', text: 'Pai, precisamos conversar. Você anda distante.' },
+    { kind: 'dialogue', speaker: 'Oliver', text: 'Quero entender o que está acontecendo. Posso ir ao laboratório?' },
     { kind: 'brain', text: 'Do outro lado, o silêncio do pai também faz parte da lembrança.' },
   ],
   father: [
     { kind: 'scene', text: 'Laboratório do pai · uma revelação' },
-    { kind: 'dialogue', speaker: 'Pai', text: 'Você está doente... há quanto tempo?' },
-    { kind: 'dialogue', speaker: 'Oliver', text: 'Eu queria ter mais tempo antes de te contar.' },
+    { kind: 'dialogue', speaker: 'Pai', text: 'Você está doente, Oliver. Eu venho tentando entender o que está acontecendo.' },
+    { kind: 'dialogue', speaker: 'Pai', text: 'Eu queria ter mais tempo antes de te contar.' },
     { kind: 'brain', text: 'O arquivo permanece incompleto.' },
   ],
   relationship: [
@@ -87,21 +93,21 @@ export type PhaseClue = { presentation?: 'context'; id: string; title: string; t
 export type PhaseObjective = { scene: string; title: string; thought: string; clues: PhaseClue[] };
 export const phaseObjectives: PhaseObjective[] = [
   { scene: 'infancia-corredor', title: 'Um caminho conhecido', thought: 'O corredor parece familiar. Caminhe por ele e deixe as lembranças voltarem aos poucos.', clues: [
-    { presentation: 'context', id: 'desenhos-corredor', title: 'Desenhos na parede', text: 'Desenhos infantis cobrem o mural. Oliver reconhece o jeito como contornava as figuras várias vezes.', x: 220, y: 310, approach: { x: 270, y: 470 } },
-    { presentation: 'context', id: 'luz-corredor', title: 'Luz da manhã', text: 'A luz atravessa as janelas e cai no piso. Por um instante, Oliver se lembra de correr por aqui depois da aula.', x: 490, y: 285, approach: { x: 490, y: 420 } },
-    { presentation: 'context', id: 'porta-sala-infantil', title: 'Porta da sala', text: 'A sala no fim do corredor ainda parece esperar por ele.', x: 810, y: 290, approach: { x: 790, y: 455 } },
+    { presentation: 'context', id: 'desenhos-corredor', title: 'Desenhos na parede', text: 'Desenhos infantis cobrem o mural. Oliver reconhece o jeito como contornava as figuras várias vezes.', x: 1310, y: 220, approach: { x: 1310, y: 475 } },
+    { presentation: 'context', id: 'luz-corredor', title: 'Luz da manhã', text: 'A luz atravessa as janelas e cai no piso. Por um instante, Oliver se lembra de correr por aqui depois da aula.', x: 300, y: 465, approach: { x: 300, y: 475 } },
+    { presentation: 'context', id: 'porta-sala-infantil', title: 'Porta da sala', text: 'A sala no fim do corredor ainda parece esperar por ele.', x: 2715, y: 310, approach: { x: 2715, y: 475 } },
   ] },
   { scene: 'infancia-sala', title: 'Vestígios da sala de aula', thought: 'Uma cadeira rabiscada, trabalhos antigos e nomes nos armários trazem um tempo mais simples de volta.', clues: [
-    { id: 'cadeira-oz', title: 'Rabisco na cadeira', text: 'As iniciais O + Z foram riscadas com cuidado no encosto. Oliver não lembra quem escreveu primeiro.', x: 780, y: 360, approach: { x: 720, y: 470 } },
-    { id: 'trabalho-infantil', title: 'Trabalho guardado', text: 'Um trabalho antigo pergunta o que ele quer ser quando crescer. A letra infantil diz: “médico, igual ao meu pai”.', x: 480, y: 300, approach: { x: 490, y: 390 } },
-    { id: 'nomes-armarios', title: 'Armários da turma', text: 'Oliver, Zoe, Michael. Os nomes devolvem rostos e vozes que ele ainda não consegue organizar.', x: 450, y: 250, approach: { x: 470, y: 340 } },
+    { id: 'cadeira-oz', title: 'Rabisco na cadeira', text: 'As iniciais O + Z foram riscadas com cuidado no encosto. Oliver não lembra quem escreveu primeiro.', x: 781, y: 278, approach: { x: 781, y: 355 } },
+    { id: 'trabalho-infantil', title: 'Trabalho guardado', text: 'Um trabalho antigo pergunta o que ele quer ser quando crescer. A letra infantil diz: “médico, igual ao meu pai”.', x: 476, y: 364, approach: { x: 477, y: 382 } },
+    { id: 'nomes-armarios', title: 'Armários da turma', text: 'Oliver, Zoe, Michael. Os nomes devolvem rostos e vozes que ele ainda não consegue organizar.', x: 473, y: 207, approach: { x: 470, y: 317 } },
   ] },
   { scene: 'cenario-02', title: 'O que aconteceu naquela aula?', thought: 'A sala parece familiar. Procure a redação, a bolsa e o celular para entender por que Oliver ficou até tarde.', clues: [
-    { id: 'relogio-aula', title: 'Relógio parado', text: '06:00. O horário parado faz a sala parecer presa a uma manhã que Oliver não consegue lembrar.', x: 690, y: 165, approach: { x: 690, y: 522 } },
-    { id: 'redacao-futuro', title: 'Redação sobre o futuro', text: 'A letra já está mais firme: “Ainda não sei o que quero fazer”. A resposta não combina com o trabalho infantil.', x: 300, y: 430, approach: { x: 350, y: 522 } },
-    { id: 'bolsa-caderno', title: 'Bolsa e caderno', text: 'Dentro da bolsa há um caderno. Na folha de rosto, uma data anotada: 17/09/1990 — o aniversário de Zoe.', x: 585, y: 430, approach: { x: 570, y: 522 } },
-    { id: 'celular-antigo', title: 'Celular antigo', text: 'O celular de Oliver guarda mensagens de Zoe e de Michael. A tela está quebrada, mas ainda acende.', x: 470, y: 420, approach: { x: 480, y: 522 } },
-    { id: 'prova-anatomia', title: 'Prova no armário de Zoe', text: 'A prova de anatomia tem uma nota baixa e o nome de Oliver. Foi isso que o amigo pediu para ele buscar.', x: 830, y: 260, approach: { x: 820, y: 522 } },
+    { id: 'relogio-aula', title: 'Relógio parado', text: '06:00. O horário parado faz a sala parecer presa a uma manhã que Oliver não consegue lembrar.', x: 553, y: 62, approach: { x: 478, y: 405 } },
+    { id: 'redacao-futuro', title: 'Redação sobre o futuro', text: 'A letra já está mais firme: “Ainda não sei o que quero fazer”. A resposta não combina com o trabalho infantil.', x: 210, y: 355, approach: { x: 350, y: 522 } },
+    { id: 'bolsa-caderno', title: 'Bolsa e caderno', text: 'Dentro da bolsa há um caderno. Na folha de rosto, uma data anotada: 17/09/1990 — o aniversário de Zoe.', x: 655, y: 350, approach: { x: 570, y: 522 } },
+    { id: 'celular-antigo', title: 'Celular antigo', text: 'O celular de Oliver guarda mensagens de Zoe e de Michael. A tela está quebrada, mas ainda acende.', x: 622, y: 485, approach: { x: 620, y: 522 } },
+    { id: 'prova-anatomia', title: 'Prova na bancada de Zoe', text: 'A prova de anatomia tem uma nota baixa e o nome de Oliver. O envelope tem a etiqueta do armário de Zoe. Alguém já o deixou sobre a bancada.', x: 839, y: 355, approach: { x: 842, y: 523 } },
   ] },
   { scene: 'faculdade-laboratorio', title: 'Uma lacuna na faculdade', thought: 'Relatórios, radiografias e remédios para dor de cabeça cercam Oliver. O relógio parou às 05:00.', clues: [
     { id: 'relatorios-faculdade', title: 'Relatórios médicos', text: 'Os relatórios descrevem sintomas que Oliver reconhece, mas não se lembra de ter contado a ninguém.', x: 340, y: 430, approach: { x: 300, y: 490 } },
@@ -126,7 +132,7 @@ export const phaseObjectives: PhaseObjective[] = [
   { scene: 'cenario-06', title: 'Descobrir o segredo do pai', thought: 'O laboratório contém a resposta que Oliver teme encontrar. Examine os vestígios de trabalho.', clues: [
     { id: 'diario-pai', title: 'Anotações na escrivaninha', text: 'Entre os livros e as folhas, Oliver reconhece a letra do pai: “Ainda não contei ao Oliver.” A revelação não foi falta de confiança; foi uma tentativa de protegê-lo.', x: 388, y: 264, approach: { x: 335, y: 470 } },
     { id: 'microscopio-pai', title: 'Microscópio na bancada central', text: 'A lâmina foi preparada pelo pai. As notas ao lado descrevem a progressão da doença e a perda de memória.', x: 605, y: 310, approach: { x: 555, y: 468 } },
-    { id: 'exames-pai', title: 'Mural de exames e anotações', text: 'Os resultados no mural indicam uma doença neurológica. As linhas conectadas mostram que o pai investigava a própria condição em segredo.', x: 716, y: 182, approach: { x: 815, y: 455 } },
+    { id: 'exames-pai', title: 'Mural de exames e anotações', text: 'Os resultados no mural indicam uma doença neurológica. As linhas conectadas mostram que o pai investigava a condição de Oliver em segredo.', x: 716, y: 182, approach: { x: 815, y: 455 } },
   ] },
   { scene: 'cenario-07', title: 'Entender a lembrança do hospital', thought: 'A imagem da cirurgia está fragmentada. Reúna os detalhes antes de falar com a consciência.', clues: [
     { id: 'monitor-hospital', title: 'Monitor clínico', text: 'Os sinais vitais estão estáveis. Oliver lembra de acordar sem saber quanto tempo passou.', x: 390, y: 465 },
@@ -139,4 +145,5 @@ export const phaseObjectives: PhaseObjective[] = [
     { id: 'horizonte-campo', title: 'Luz no horizonte', text: 'O sol atravessa as nuvens. Oliver aceita que algumas respostas chegam junto com a despedida.', x: 740, y: 445 },
   ] },
 ];
+
 

@@ -17,3 +17,5 @@ dialog.ending-white{inset:0;margin:auto;width:100vw;height:100dvh;max-width:none
 dialog.ending-white::backdrop{background:#fff}
 .ending-white-content{display:grid;gap:22px;justify-items:center;font:clamp(20px,3vw,32px) Georgia,serif}
 .ending-white-content .secondary{color:#1b2422;border-color:#65716b}
+
+.field-final-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:field-video-enter 2.2s ease-in both}.field-finale:has(.field-final-video) .field-pause{z-index:3}@keyframes field-video-enter{from{opacity:0}to{opacity:1}}@media(prefers-reduced-motion:reduce){.field-final-video{animation:none}}

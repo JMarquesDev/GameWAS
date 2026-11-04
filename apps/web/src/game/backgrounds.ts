@@ -1,8 +1,8 @@
 // Mapa cronológico de cenários e das sete fases narrativas do documento.
 export const backgrounds = [
   { key: 'infancia', title: '01 — Quarto da infância', file: 'infancia-quarto-v7.png', phase: 0 },
-  { key: 'infancia-corredor', title: '02 — Corredor da escola', file: 'infancia-corredor-escola-v1.png', phase: 0 },
-  { key: 'infancia-sala', title: '03 — Sala de aula · infância', file: 'infancia-sala-aula-v1.png', phase: 0 },
+  { key: 'infancia-corredor', title: '02 — Corredor da escola', file: 'corredor-tres-trechos.png', phase: 0 },
+  { key: 'infancia-sala', title: '03 — Sala de aula · infância', file: 'infancia-sala-aula-v2.png', phase: 0 },
   { key: 'cenario-02', title: '04 — Laboratório escolar · 04:00', file: 'cena-02-laboratorio-aula-v2.png', phase: 1 },
   { key: 'faculdade-laboratorio', title: '05 — Laboratório da faculdade · 05:00', file: 'cena-03-laboratorio-faculdade-v1.png', phase: 2 },
   { key: 'cenario-03', title: '06 — Apartamento · sala de estar', file: 'cena-03-sala-estar-v2.png', phase: 3 },

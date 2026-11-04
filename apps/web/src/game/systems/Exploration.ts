@@ -31,13 +31,13 @@ export class Exploration {
     const ratio = sceneSize(key).height / 540;
     const frame = () => {
       const size = sceneSize(key);
-      camera.setBounds(0, 0, size.width, size.height);
-      camera.setZoom(Math.max(scene.scale.width / size.width, scene.scale.height / size.height) * 1.04);
+      camera.setBounds(0, 0, key === 'infancia-corredor' ? size.width * 3 : size.width, size.height);
+      camera.setZoom(Math.max(scene.scale.width / size.width, scene.scale.height / size.height) * 1.01);
       camera.setDeadzone(scene.scale.width * .09, scene.scale.height * .04);
     };
     frame();
     // O foco fica entre cabeça e pés; a margem reduz ajustes a cada passo.
-    camera.startFollow(this.oliver, false, usePreferences.getState().reducedMotion ? 1 : 0.075, usePreferences.getState().reducedMotion ? 1 : 0.075, 0, 205 * ratio);
+    camera.startFollow(this.oliver, false, usePreferences.getState().reducedMotion ? 1 : 0.075, usePreferences.getState().reducedMotion ? 1 : 0.075, 0, 110 * ratio);
     scene.scale.on('resize', frame);
     const flush = () => useGameStore.getState().checkpoint(this.key, this.foot);
     const unsubscribe = useGameStore.subscribe((state, previous) => { if (state.paused && !previous.paused) flush(); });
@@ -64,7 +64,7 @@ export class Exploration {
         const before = this.foot;
         this.foot = moveOnFloor(this.key, this.foot, waypoint.x-this.foot.x, waypoint.y-this.foot.y);
         animateOliver(this.oliver, this.foot.x-before.x, (this.foot.y-before.y)/.65, delta);
-        this.path.shift(); this.velocity = { x: 0, y: 0 }; this.render();
+        this.path.shift(); this.render();
         if (!this.path.length) { const arrived = this.arrival; this.arrival = undefined; arrived?.(); }
         return;
       }
@@ -72,7 +72,7 @@ export class Exploration {
     }
     const length = Math.hypot(dx, dy);
     if (length) { dx /= length; dy /= length; }
-    const response = waypoint ? 1 : 1 - Math.exp(-Math.min(delta, 50) / 55);
+    const response = waypoint ? 1 : 1 - Math.exp(-Math.min(delta, 50) / (length ? 85 : 55));
     this.velocity.x += (dx - this.velocity.x) * response;
     this.velocity.y += (dy - this.velocity.y) * response;
     if (!length && Math.hypot(this.velocity.x, this.velocity.y) < .04) this.velocity = { x: 0, y: 0 };
@@ -92,7 +92,9 @@ export class Exploration {
   private render() {
     const ratio = sceneSize(this.key).height / 540;
     this.oliver.setPosition(this.foot.x, this.foot.y * ratio);
-    this.oliver.setScale(perspective(this.key, this.foot.y) * ratio);
+    // The corridor artwork uses the classroom doorway as its height reference.
+    const architecturalScale = this.key === 'infancia-corredor' ? 1.10 : 1;
+    this.oliver.setScale(perspective(this.key, this.foot.y) * ratio * architecturalScale);
     this.oliver.setDepth(this.foot.y);
   }
 }

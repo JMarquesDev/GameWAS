@@ -22,7 +22,19 @@ class BackgroundScene extends Phaser.Scene {
     const key = this.sys.settings.key;
     this.cameras.main.setBackgroundColor('#101719');
     const height = sceneSize(key).height;
-    this.add.image(480, height / 2, key).setDisplaySize(960, height).setDepth(-1);
+    if (key === 'infancia-corredor') {
+      const texture = this.textures.get(key);
+      const source = texture.getSourceImage();
+      for (let i = 0; i < 3; i++) {
+        const top = Math.round(source.height * i / 3);
+        const bottom = Math.round(source.height * (i + 1) / 3);
+        const frame = 'trecho-' + i;
+        if (!texture.has(frame)) texture.add(frame, 0, 0, top, source.width, bottom - top);
+        this.add.image(i * 960, 0, key, frame).setOrigin(0).setDisplaySize(960, height).setDepth(-1);
+      }
+    } else {
+      this.add.image(480, height / 2, key).setDisplaySize(960, height).setDepth(-1);
+    }
     addForeground(this, key, key);
     this.exploration = new Exploration(this, key);
     this.objective = phaseObjectives.find(item => item.scene === key);
@@ -59,7 +71,7 @@ class BackgroundScene extends Phaser.Scene {
     const interactiveClues = this.objective.clues.filter(clue => clue.presentation !== 'context');
     const nearest = interactiveClues.map(clue => { const point = clue.approach ?? clue; return { clue, distance: Math.hypot(point.x - foot.x, point.y - foot.y) }; }).filter(item => item.distance < 92).sort((a, b) => a.distance - b.distance)[0]?.clue;
     this.prompt.setVisible(!paused && !!nearest);
-    if (nearest) this.prompt.setPosition(nearest.x, nearest.y * sceneSize(this.sys.settings.key).height / 540 - 22).setText(`${useGameStore.getState().progress.phaseClues[this.sys.settings.key]?.includes(nearest.id) ? 'Rever' : 'Investigar'} · E`);
+    if (nearest) this.prompt.setPosition(nearest.x, nearest.y * sceneSize(this.sys.settings.key).height / 540 - 22).setText(`${useGameStore.getState().progress.phaseClues[this.sys.settings.key]?.includes(nearest.id) ? 'Rever' : 'Investigar'}: ${nearest.title} · E`);
     interactiveClues.forEach((clue, index) => {
       const found = useGameStore.getState().progress.phaseClues[this.sys.settings.key]?.includes(clue.id) ?? false;
       const active = nearest?.id === clue.id && !paused;
@@ -83,8 +95,8 @@ class BackgroundScene extends Phaser.Scene {
     else useGameStore.getState().notify(target.text);
   }
 }
-export class CorredorInfanciaScene extends BackgroundScene { constructor() { super('infancia-corredor', 'infancia-corredor-escola-v2.png'); } }
-export class SalaInfanciaScene extends BackgroundScene { constructor() { super('infancia-sala', 'infancia-sala-aula-v1.png'); } }
+export class CorredorInfanciaScene extends BackgroundScene { constructor() { super('infancia-corredor', 'corredor-tres-trechos.png'); } }
+export class SalaInfanciaScene extends BackgroundScene { constructor() { super('infancia-sala', 'infancia-sala-aula-v2.png'); } }
 export class LaboratorioAulaScene extends BackgroundScene { constructor() { super('cenario-02', 'cena-02-laboratorio-aula-v2.png'); } }
 export class LaboratorioFaculdadeScene extends BackgroundScene { constructor() { super('faculdade-laboratorio', 'cena-03-laboratorio-faculdade-v1.png'); } }
 export class SalaEstarScene extends BackgroundScene { constructor() { super('cenario-03', 'cena-03-sala-estar-v2.png'); } }

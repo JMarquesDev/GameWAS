@@ -11,3 +11,4 @@ coverage/
 
 tools/.video-deps/
 __pycache__/
+.tools/

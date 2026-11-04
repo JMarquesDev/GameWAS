@@ -19,17 +19,17 @@ export const floors: Record<string, Floor> = {
     spawn: { x:170,y:490 }, farY:350,
   },
   'infancia-corredor': {
-    polygon: [[0, 420], [318, 322], [390, 254], [574, 254], [754, 332], [960, 420], [960, 532], [0, 532]],
-    obstacles: [box(830, 290, 958, 420)],
-    spawn: { x: 170, y: 500 }, farY: 260,
+    polygon: [[0,440],[2880,440],[2880,536],[0,536]],
+    obstacles: [],
+    spawn: { x: 85, y: 455 }, farY: 383,
   },
   'infancia-sala': {
-    polygon: [[0, 305], [960, 305], [960, 532], [0, 532]],
-    obstacles: [box(0, 356, 285, 532), box(285, 318, 430, 400), box(545, 318, 720, 404), box(735, 355, 960, 532), box(400, 260, 565, 305)],
-    spawn: { x: 490, y: 500 }, farY: 300,
+    polygon: [[0, 323], [210, 305], [960, 305], [960, 536], [0, 536]],
+    obstacles: [box(90, 296, 275, 336), box(685, 296, 881, 336)],
+    spawn: { x: 480, y: 490 }, farY: 305,
   },
   'cenario-02': {
-    polygon: [[18, 365], [125, 332], [420, 318], [565, 318], [825, 350], [940, 390], [940, 532], [18, 532]],
+    polygon: [[18, 365], [125, 332], [420, 318], [565, 318], [825, 350], [940, 390], [940, 540], [18, 540]],
     obstacles: [box(55, 345, 451, 515), box(505, 345, 905, 515), box(123, 290, 395, 347), box(600, 290, 823, 347)],
     spawn: { x: 478, y: 518 }, farY: 310,
   },
@@ -103,6 +103,7 @@ export function moveOnFloor(key: string, position: Point, dx: number, dy: number
 }
 export function perspective(key: string, y: number): number {
   const far = (floors[key] ?? floors.infancia).farY;
+  if (key === 'infancia-sala') return 0.68 + 0.32 * Math.max(0, Math.min(1, (y - 300) / 230));
   return 0.94 + 0.06 * Math.max(0, Math.min(1, (y - far) / (530 - far)));
 }
 

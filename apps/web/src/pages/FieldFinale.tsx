@@ -12,11 +12,13 @@ const narration = [
 const artwork = '/assets/backgrounds/cena-08-campo-final-v3.png';
 
 export function FieldFinale({ paused, onPause, onFinish }: { paused: boolean; onPause: () => void; onFinish: () => void }) {
-  const { reducedMotion, volume } = usePreferences();
+  const { reducedMotion, volume: savedVolume, muted } = usePreferences();
+  const volume = muted ? 0 : savedVolume;
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const [line, setLine] = useState(-1);
   const [silent, setSilent] = useState(false);
+  const [videoEnded, setVideoEnded] = useState(false);
   const complete = line >= narration.length;
 
   useEffect(() => {
@@ -59,6 +61,7 @@ export function FieldFinale({ paused, onPause, onFinish }: { paused: boolean; on
     {!loaded && <p className="field-loading" role="status">{failed ? 'Não foi possível carregar o campo. Recarregue a página para tentar novamente.' : 'Preparando a última lembrança…'}</p>}
     <button className="field-pause secondary" onClick={onPause}>Pausa <kbd>Esc</kbd></button>
     {loaded && line >= 0 && !complete && <div className="field-caption" key={line}><p aria-live="polite">{narration[line]}</p>{silent && <small>Narração disponível em legendas neste dispositivo.</small>}</div>}
-    {complete && <div className="field-complete"><button className="secondary" onClick={onFinish}>Concluir história</button></div>}
+    {complete && !videoEnded && <video className="field-final-video" autoPlay muted playsInline src="/assets/video/was-campo-final.mp4" onEnded={() => setVideoEnded(true)} onError={() => setVideoEnded(true)} aria-label="Oliver contempla o campo ao pôr do sol"/>}
+    {complete && videoEnded && <div className="field-complete"><button className="secondary" onClick={onFinish}>Concluir história</button></div>}
   </section>;
 }
