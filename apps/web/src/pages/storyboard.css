@@ -7,3 +7,10 @@
 .evidence-bank,.evidence-board{display:flex;flex-wrap:wrap;gap:14px;margin:24px 0}.evidence-bank button{background:#e8d9b9;color:#302b23;box-shadow:2px 4px 8px #0003;cursor:grab;max-width:240px;transform:rotate(-1deg)}.evidence-bank button:nth-child(even){transform:rotate(1deg)}.evidence-bank .selected{outline:3px solid #baccb1;outline-offset:3px}.evidence-slot{display:grid;gap:14px;flex:1;min-width:160px;min-height:125px;border:2px dashed #cbb78d;background:#202c28;color:#f4ecda}.evidence-slot small{color:#ddcba5}.evidence-slot strong{font:18px Georgia,serif}
 @media(max-width:650px){.comic-page{grid-template-rows:180px 150px}.comic-sequence .memory-words{font-size:18px}}
 @media(prefers-reduced-motion:reduce){.comic-panel{transition:none}}
+.memory-strip{display:flex;gap:clamp(3px,1vw,12px);height:clamp(150px,36vh,360px)}
+.memory-strip>div{min-width:0;overflow:hidden;border:2px solid #332b23}
+.memory-strip .current-frame{flex:3}
+.memory-strip .past-frame{flex:1;align-self:end;height:75%}
+.memory-strip .past-frame:nth-child(2){height:88%}
+.drawing-piece{display:block;width:clamp(70px,12vw,140px);aspect-ratio:1448 / 3258;margin:auto;background-image:url('/assets/inspection/brain-pencil-v1.png');background-size:300% 100%;background-repeat:no-repeat}
+

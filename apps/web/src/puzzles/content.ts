@@ -2,7 +2,7 @@ export type Puzzle = { id: string; title: string; evidence: string; questions: s
 export const puzzles: Record<string, Puzzle[]> = {
  infancia: [
  {id:'modelo',title:'Modelo anatômico',evidence:'O livro mostra o cérebro no crânio, os pulmões no tórax e o estômago no abdômen.',questions:['Crânio','Tórax','Abdômen'],options:['Estômago','Cérebro','Pulmões'],answers:[1,2,0]},
- {id:'desenho',title:'Reconstruir o desenho',evidence:'Na pasta, o rascunho tem um contorno externo, curvas internas e uma pequena haste na base. Os três fragmentos do estojo completam essas marcas.',questions:['Contorno externo','Curvas internas','Haste na base'],options:['Tronco','Silhueta','Dobras'],answers:[1,2,0]}],
+ {id:'desenho',title:'Reconstruir o desenho',evidence:'Os pedaços da folha estavam no estojo. Aproxime as bordas e siga os traços de lápis para recompor o desenho.',questions:['Contorno externo','Curvas internas','Haste na base'],options:['Tronco','Silhueta','Dobras'],answers:[1,2,0]}],
  'cenario-02': [
  {id:'iniciais',title:'As iniciais escondidas',evidence:'Na cadeira: O + Z. As etiquetas dos armários mostram Oliver, Zoe e Michael.',questions:['Qual armário corresponde à segunda inicial?'],options:['Michael','Zoe','Oliver'],answers:[1]},
  {id:'conversa',title:'Conversa incompleta',evidence:'Ordene as mensagens: primeiro vem a pergunta sobre o trabalho; depois a resposta; por último, o pedido para buscar o que ficou guardado.',questions:['Primeiro','Depois','Por fim'],options:['Michael: pega no armário da Zoe.','Zoe: trouxe o trabalho?','Oliver: deixei guardado na escola.'],answers:[1,2,0]}],
@@ -18,3 +18,4 @@ export const puzzles: Record<string, Puzzle[]> = {
  {id:'prontuario',title:'Organizar o prontuário',evidence:'O primeiro registro é da internação; o seguinte descreve o procedimento; o último registra o despertar.',questions:['Primeiro','Depois','Por fim'],options:['Despertar','Internação','Procedimento'],answers:[1,2,0]},
  {id:'foto-hospital',title:'A anotação no verso',evidence:'No verso da fotografia: “Fiquei aqui até você abrir os olhos”. O prontuário reúne admissão, procedimento e recuperação.',questions:['A qual registro a anotação se conecta?'],options:['Recuperação','Admissão','Procedimento'],answers:[0]}],
 };
+

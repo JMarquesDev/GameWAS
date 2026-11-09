@@ -39,8 +39,12 @@ export function MainMenu({ onStart, onContinue, onAdmin, slots, completed }: Pro
       }} src="/assets/video/was-cover-loop.mp4" />
     <button className="secondary cover-skip" onClick={finishIntro}>Pular abertura</button>
   </section>;
+  const landscape = completed || previewCompleted ? 'campo-luz' : 'campo-chuva';
   return <section className={`main-menu ${completed || previewCompleted ? 'menu-completed' : 'menu-rainy'} ${leaving ? 'menu-leaving' : ''}`} aria-label="Menu inicial" aria-busy={leaving}>
-    <div className="menu-landscape" aria-hidden="true"/><div className="menu-weather" aria-hidden="true"/><div className="menu-atmosphere" aria-hidden="true"/>
+    <div className="menu-landscape" aria-hidden="true">
+      <img src={`/assets/menu/${landscape}-v1.png`} alt=""/>
+    </div>
+    <div className="menu-atmosphere" aria-hidden="true"/>
     <div className="menu-content" key={panel}>
       <p className="eyebrow">MEMÓRIAS DE OLIVER</p><h1>WAS</h1><span className="menu-rule" aria-hidden="true"/>
       {panel === 'main' ? <>
