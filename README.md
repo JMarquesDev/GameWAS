@@ -1,6 +1,6 @@
-# WAS
+# WAS — Memórias de Oliver
 
-Base do jogo narrativo com exploração lateral 2D e inspeção 3D. Entrega acadêmica: 02/11/2026.
+WAS é um jogo narrativo de exploração e memória. Oliver percorre espaços marcantes da própria vida, investiga objetos, reúne pistas e reconstrói acontecimentos ligados à família, à escola, à medicina e às suas escolhas. A história combina exploração 2D, diálogos, puzzles, flashbacks em storyboard e inspeções detalhadas de objetos em 3D.
 
 ## Iniciar no VS Code
 
@@ -29,12 +29,12 @@ npm run build      # gera apps/web/dist
 - `packages/design-tokens`: cores compartilhadas, provisórias.
 - `docs`: decisões, testes e registro de assets.
 
-## Estado inicial
+## Estrutura narrativa
 
-A web tem menu, quarto geométrico, movimento A/D ou setas, câmera, investigação por clique ou E próximo do objeto, inspeção 3D de um modelo provisório, coleta de três pistas, primeira memória e save local. Cada fase possui arquivo próprio; as fases 2–7 são espaços reservados sem conteúdo jogável. O epílogo ainda precisa ser fornecido e integrado. Arte, animações finais, áudio, QTE, escolhas e site completo de campanha permanecem pendentes.
+O jogo acompanha Oliver em uma sequência de fases ligadas por memórias. Cada ambiente possui um objetivo, objetos investigáveis e uma transição narrativa para a fase seguinte. Entre as fases, os flashbacks revelam momentos da infância, adolescência, faculdade, relacionamento, laboratório, hospital e campo.
 
-O mobile valida o compartilhamento de conteúdo e regras com cartões investigáveis; ainda não implementa movimentação lateral nem inspeção 3D. Seu save é independente do navegador.
+## Estado atual
 
-As versões foram limitadas por faixa de compatibilidade: Phaser 3.90, React 19.1 e Expo SDK 54. Não atualizar React/React Native separadamente do SDK Expo. Usar `expo install` para módulos nativos; conferir a disponibilidade de Expo Go compatível ou usar development build.
+A versão web já possui menu, saves, exploração, movimentação, investigação por clique ou tecla `E`, diário, coleta de pistas, progressão da primeira fase e inspeção 3D. O projeto mantém uma base compartilhada para a futura versão mobile.
 
-Não há backend, autenticação ou publicação automática. Howler e expo-audio estão preparados como dependências; nenhum áudio é reproduzido ainda. Arte geométrica criada por código para validar a estrutura.
+Para continuar o desenvolvimento em outro computador, clone o repositório e execute os comandos acima.
