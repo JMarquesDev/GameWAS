@@ -11,7 +11,6 @@ export function Preferences() {
     <label><input type="checkbox" checked={preferences.muted} onChange={event => preferences.update({ muted: event.target.checked })}/> Desativar todo o áudio</label>
     <label><input type="checkbox" checked={preferences.reducedMotion} onChange={event => preferences.update({ reducedMotion: event.target.checked })}/> Reduzir transições, respiração e animação da capa</label>
     <label><input type="checkbox" checked={preferences.largeText} onChange={event => preferences.update({ largeText: event.target.checked })}/> Texto ampliado</label>
-    <label><input type="checkbox" checked={preferences.showHints} onChange={event => preferences.update({ showHints: event.target.checked })}/> Exibir lembretes dos controles</label>
     <label>Qualidade visual <select value={preferences.quality} onChange={event => preferences.update({ quality: event.target.value as 'low' | 'high' })}><option value="high">Alta · sombras e detalhes</option><option value="low">Compatível · desempenho</option></select></label>
     <p className="note">Preferências salvas neste navegador. O tempo da história não é um cronômetro.</p>
 

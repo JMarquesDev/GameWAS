@@ -10,3 +10,8 @@
 .game-intro{position:fixed;inset:0;z-index:9000;background:#090d0c;display:flex;align-items:center;justify-content:center}.game-intro video{width:100%;height:100%;object-fit:contain}.game-intro button{position:absolute;right:clamp(20px,5vw,80px);bottom:clamp(20px,5vh,60px);background:#15201dde;color:#f4eedf}
 
 .game-intro video{pointer-events:none}.game-intro .intro-play{right:50%;bottom:50%;transform:translate(50%,50%)}.game-intro>p{position:absolute;inset:45% 15% auto;text-align:center;color:#fff}
+
+.main-menu>button.menu-edition{width:auto;left:50%;right:auto;transform:translateX(-50%);background:transparent;border:0;padding:8px;pointer-events:auto;white-space:nowrap}
+.main-menu>button.menu-edition:hover:not(:disabled){background:transparent;color:#6f7b70}
+.main-menu>button.menu-admin-revealed{font-size:10px;letter-spacing:1px;color:#a0a797}
+.main-menu>button.menu-admin-revealed:hover:not(:disabled){color:#a0a797}

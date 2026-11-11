@@ -5,6 +5,10 @@ import { canExamine } from '@was/game-core';
 import { ObjectModel } from './ObjectModels';
 import { ACESFilmicToneMapping, PCFSoftShadowMap } from 'three';
 import { usePreferences } from '../game/preferences';
+import { connectedGamepad, gamepadStatus } from '../game/gamepad';
+const closestZoom = 1.9;
+const farthestZoom = 6;
+const clampZoom = (value: number) => Math.max(closestZoom, Math.min(farthestZoom, value));
 
 function CameraDistance({ zoom }: { zoom: number }) {
   const { camera, invalidate } = useThree();
@@ -16,7 +20,7 @@ class ViewerBoundary extends Component<{ children: ReactNode }, { failed: boolea
   static getDerivedStateFromError() { return { failed: true }; }
   render() { return this.state.failed ? <p>O modo 3D não está disponível neste aparelho. Use os botões de orientação para examinar.</p> : this.props.children; }
 }
-export default function ObjectViewer({ id, onReady }: { id: ObjectId; onReady: (ready: boolean) => void }) {
+export default function ObjectViewer({ id, onReady }: { id: ObjectId | 'trabalho-infantil'; onReady: (ready: boolean) => void }) {
   const quality = usePreferences(state => state.quality);
   const [rotation, setRotation] = useState<[number, number]>([0, 0]);
   const [zoom, setZoom] = useState(3.65);
@@ -24,17 +28,39 @@ export default function ObjectViewer({ id, onReady }: { id: ObjectId; onReady: (
   const surface = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const element = surface.current;
-    const wheel = (event: WheelEvent) => { event.preventDefault(); setZoom(value => Math.max(2.9, Math.min(6, value + event.deltaY * .003))); };
+    const wheel = (event: WheelEvent) => { event.preventDefault(); setZoom(value => clampZoom(value + event.deltaY * .003)); };
     element?.addEventListener('wheel', wheel, { passive: false });
     return () => element?.removeEventListener('wheel', wheel);
   }, []);
-  const ready = canExamine(id, Math.cos(rotation[0]) * Math.cos(rotation[1]));
+  useEffect(() => {
+    let frame = 0;
+    let lastTime = 0;
+    const tick = (time: number) => {
+      const seconds = Math.min(.05, Math.max(0, (time - (lastTime || time)) / 1000));
+      lastTime = time;
+      if (!document.hidden && !gamepadStatus.cursorEnabled) {
+        const pad = connectedGamepad();
+        if (pad) {
+          const axis = (value: number) => Math.abs(value) < .18 ? 0 : value;
+          const horizontal = axis(pad.axes[2] ?? 0);
+          const vertical = axis(pad.axes[3] ?? 0);
+          if (horizontal || vertical) setRotation(([x, y]) => [x + vertical * 2.2 * seconds, y + horizontal * 2.2 * seconds]);
+          const zoomInput = (pad.buttons[6]?.value ?? 0) - (pad.buttons[7]?.value ?? 0);
+          if (Math.abs(zoomInput) > .1) setZoom(value => clampZoom(value + zoomInput * 2.2 * seconds));
+        }
+      }
+      frame = window.requestAnimationFrame(tick);
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+  const ready = id === 'trabalho-infantil' ? Math.cos(rotation[0]) * Math.cos(rotation[1]) > .45 : canExamine(id, Math.cos(rotation[0]) * Math.cos(rotation[1]));
   useEffect(() => onReady(ready), [ready, onReady]);
   return <>
-    <div ref={surface} className="inspection-viewer" tabIndex={0} role="group" aria-label="Objeto 3D: arraste ou use as setas para girar" onKeyDown={event => {
+    <div ref={surface} className="inspection-viewer" tabIndex={0} role="group" aria-label="Objeto 3D: arraste, use as setas ou o analógico direito para girar" onKeyDown={event => {
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '-'].includes(event.key)) return;
       event.preventDefault(); event.stopPropagation();
-      if (event.key === '+' || event.key === '-') setZoom(value => Math.max(2.9, Math.min(6, value + (event.key === '+' ? -.2 : .2))));
+      if (event.key === '+' || event.key === '-') setZoom(value => clampZoom(value + (event.key === '+' ? -.2 : .2)));
       else setRotation(([x, y]) => [x + (event.key === 'ArrowUp' ? -.2 : event.key === 'ArrowDown' ? .2 : 0), y + (event.key === 'ArrowLeft' ? -.2 : event.key === 'ArrowRight' ? .2 : 0)]);
     }} onPointerDown={event => { event.currentTarget.focus(); drag.current = { x: event.clientX, y: event.clientY }; event.currentTarget.setPointerCapture(event.pointerId); }}
       onPointerMove={event => { if (!drag.current) return; const dx = event.clientX - drag.current.x; const dy = event.clientY - drag.current.y; drag.current = { x: event.clientX, y: event.clientY }; setRotation(([x, y]) => [x + dy * 0.012, y + dx * 0.012]); }}
@@ -46,7 +72,7 @@ export default function ObjectViewer({ id, onReady }: { id: ObjectId; onReady: (
         <group rotation={[rotation[0], rotation[1], 0]}><ObjectModel id={id}/></group><CameraDistance zoom={zoom}/>
       </Canvas></ViewerBoundary>
     </div>
-    <p className="inspection-help">Arraste para girar. Use a roda ou o controle para aproximar.</p>
+    <p className="inspection-help">Arraste ou use o analógico direito para girar. L2/R2 ou a roda ajustam o zoom. Desligue o ponteiro pelo touchpad para girar com o analógico.</p>
     <details className="viewer-assistance"><summary>Controles</summary><div className="rotation-controls" aria-label="Orientação do objeto">
       <button className="secondary" aria-label="Girar para esquerda" onClick={() => setRotation(([x, y]) => [x, y - Math.PI / 4])}>↶</button>
       <button className="secondary" aria-label="Girar para direita" onClick={() => setRotation(([x, y]) => [x, y + Math.PI / 4])}>↷</button>
@@ -54,7 +80,7 @@ export default function ObjectViewer({ id, onReady }: { id: ObjectId; onReady: (
       <button className="secondary" onClick={() => setRotation([0, Math.PI])}>Ver verso</button>
       <button className="secondary" onClick={() => { setRotation([0, 0]); setZoom(3.65); }}>Restaurar</button>
     </div><p className="inspection-help">Setas giram; + e − aproximam.</p></details>
-    <label>Zoom <input type="range" min="2.9" max="6" step="0.05" value={8.9 - zoom} onChange={event => setZoom(8.9 - Number(event.target.value))}/></label>
+    <label>Zoom <input type="range" min={closestZoom} max={farthestZoom} step="0.05" value={closestZoom + farthestZoom - zoom} onChange={event => setZoom(clampZoom(closestZoom + farthestZoom - Number(event.target.value)))}/></label>
     <p className={ready ? 'clue-ready' : 'inspection-help'} role="status">{ready ? 'Detalhe à vista.' : 'Gire para encontrar o detalhe.'}</p>
   </>;
 }

@@ -5,7 +5,10 @@ import { breathScale, facingForMovement, type Facing } from './oliverMotion';
 // Casual idle and walking frames share the same source height.
 const casualScale = 0.30;
 const strideKey = 'oliver-casual-walk-original';
-const medicalScale = 0.165;
+// O idle lateral é uma arte alta separada; os demais sprites são folhas de 1024px.
+// Escalas equivalentes evitam que Oliver mude de tamanho ao andar/virar.
+const medicalFrameScale = 0.30;
+const medicalSideScale = 0.165;
 
 function casualScene(scene: Phaser.Scene) { return !['cenario-07', 'cenario-08'].includes(String(scene.sys.settings.key)); }
 
@@ -70,7 +73,7 @@ export function createOliver(scene: Phaser.Scene) {
     }
   }
   const shadow = scene.add.ellipse(0, -3, 65, 12, 0x241b16, 0.24);
-  const sprite = scene.add.sprite(0, 0, casual ? textureKey : 'oliver-side-idle', casual ? '0' : undefined).setOrigin(0.5, casual ? 0.955 : 0.975).setScale(casual ? casualScale : medicalScale);
+  const sprite = scene.add.sprite(0, 0, casual ? textureKey : 'oliver-side-idle', casual ? '0' : undefined).setOrigin(0.5, casual ? 0.955 : 0.975).setScale(casual ? casualScale : medicalSideScale);
   const container = scene.add.container(170, 490, [shadow, sprite]);
   container.setData('sprite', sprite);
   container.setData('outfit', casual ? 'casual' : 'medical');
@@ -94,7 +97,7 @@ export function animateOliver(oliver: Phaser.GameObjects.Container, dx: number, 
   const moving = !paused && distance >= 0.025;
   sprite.setFlipX(facing === 'left');
   if (moving) {
-    sprite.setOrigin(0.5, casual ? 0.955 : 0.975).setScale(casual ? casualScale : medicalScale);
+    sprite.setOrigin(0.5, casual ? 0.955 : 0.975).setScale(casual ? casualScale : medicalFrameScale);
     // Keep the same stride phase through turns; advance only when actually moving.
     const strideLength = 190;
     const gait = ((oliver.getData('gaitDistance') as number) + distance) % strideLength;
@@ -121,7 +124,7 @@ export function animateOliver(oliver: Phaser.GameObjects.Container, dx: number, 
     const idleFrame = lateral && !casual ? undefined : '0';
     if (sprite.texture.key !== idleTexture || (idleFrame !== undefined && sprite.frame.name !== idleFrame)) sprite.setTexture(idleTexture, idleFrame);
     // A pose lateral tem resolução maior; normaliza altura e apoio dos pés.
-    const baseScale = casual ? casualScale : medicalScale;
+    const baseScale = casual ? casualScale : lateral ? medicalSideScale : medicalFrameScale;
     sprite.setOrigin(0.5, lateral && !casual ? 0.975 : 0.955);
     const elapsed = (oliver.getData('breathTime') as number) + Math.min(delta, 50);
     oliver.setData('breathTime', elapsed);

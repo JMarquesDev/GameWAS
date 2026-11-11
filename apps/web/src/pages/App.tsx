@@ -3,7 +3,7 @@ import { MusicPlayer } from './MusicPlayer';
 import { PuzzleSequence, puzzlesComplete } from '../puzzles/PuzzleSequence';
 import { FieldFinale } from './FieldFinale';
 import { DrowsinessEvent } from './DrowsinessEvent';
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { childhoodObjects, phaseObjectives, type FlashbackKind } from '@was/game-content';
 import { canCompletePhase, canRecoverMemory } from '@was/game-core';
 import { useGameStore } from '../game/store';
@@ -11,6 +11,11 @@ import { backgrounds } from '../game/backgrounds';
 import { MainMenu } from './MainMenu';
 import { usePreferences } from '../game/preferences';
 import { InspectionDialog } from '../inspection/InspectionDialog';
+import { SchoolWorkDialog } from '../inspection/SchoolWorkDialog';
+import { SchoolNotebookDialog } from '../inspection/SchoolNotebookDialog';
+import { NumericKeypad } from '../ui/NumericKeypad';
+import { ChairMarkDialog } from '../inspection/ChairMarkDialog';
+import { ClassroomCubbiesDialog } from '../inspection/ClassroomCubbiesDialog';
 import { MemoryJournal } from './MemoryJournal';
 import { Preferences } from './Preferences';
 import { Modal } from './Modal';
@@ -18,10 +23,10 @@ import { MemorySequence } from './MemorySequence';
 import { FlashbackSequence } from './FlashbackSequence';
 import { PhaseJournal } from './PhaseJournal';
 import { gameAudio } from '../game/audio';
+import { connectedGamepad, gamepadStatus } from '../game/gamepad';
 const tasks: Record<string, string> = {
   'infancia-sala': 'Descubra o que Oliver queria ser quando criança.',
-  'cenario-02': 'Recupere as mensagens do celular e siga a indicação até o armário.',
-  'faculdade-laboratorio': 'Reconstrua a sequência da semana em que Oliver passou mal.',
+  'cenario-02': 'No laboratório da faculdade, recupere as mensagens do celular e examine a prova.',
   'cenario-03': 'Reconheça vestígios da rotina de Oliver e Zoe na sala.',
   'cenario-04': 'Compare as fotografias e identifique onde foram tiradas.',
   'cenario-05': 'Relacione os bilhetes da cozinha às lembranças para ouvir a gravação.',
@@ -33,6 +38,7 @@ export function App() {
   const [completed, setCompleted] = useState(() => { try { return localStorage.getItem('was:completed:v1') === 'true'; } catch { return false; } });
   function completeGame() { if (!admin) { setCompleted(true); try { localStorage.setItem('was:completed:v1', 'true'); } catch { /* Session remains usable. */ } } setEndingOpen(false); menu(); }
   const [puzzleScene, setPuzzleScene] = useState<string | null>(null);
+  const [objectiveExpanded, setObjectiveExpanded] = useState(true);
   const [sleepActive, setSleepActive] = useState(false);
   const [run, setRun] = useState(0);
   const [started, setStarted] = useState(false);
@@ -44,9 +50,13 @@ export function App() {
   const [endingChoice, setEndingChoice] = useState<'question' | 'remember' | 'release'>('question');
   const [challengeOpen, setChallengeOpen] = useState(false);
   const [schoolPhoneOpen, setSchoolPhoneOpen] = useState(false);
+  const [schoolNotebookOpen, setSchoolNotebookOpen] = useState(false);
+  const [schoolWorkOpen, setSchoolWorkOpen] = useState(false);
+  const [chairMarkOpen, setChairMarkOpen] = useState(false);
+  const [classroomCubbiesOpen, setClassroomCubbiesOpen] = useState(false);
   const [schoolPassword, setSchoolPassword] = useState('');
+  const [schoolPasswordError, setSchoolPasswordError] = useState('');
   const [schoolChoiceOpen, setSchoolChoiceOpen] = useState(false);
-  const [facultyChoiceOpen, setFacultyChoiceOpen] = useState(false);
   const [hospitalOrder, setHospitalOrder] = useState(['', '', '']);
   const [pauseOpen, setPauseOpen] = useState(false);
   const [memoryOpen, setMemoryOpen] = useState(false);
@@ -54,13 +64,182 @@ export function App() {
   const [flashbackTarget, setFlashbackTarget] = useState<string | null>(null);
   const [transition, setTransition] = useState<string | null>(null);
   const [tab, setTab] = useState<'main' | 'preferences' | 'controls' | 'admin'>('main');
+  const [gamepadName, setGamepadName] = useState('');
+  const [gamepadHint, setGamepadHint] = useState(false);
+  const [cursorEnabled, setCursorEnabled] = useState(false);
+  const cursorEnabledRef = useRef(false);
+  const gamepadCursor = useRef<HTMLDivElement>(null);
+  const cursorPosition = useRef({ x: 0, y: 0 });
+  const gamepadContext = useRef({ started, blocked: false, sleepActive, pauseOpen, transition, isField: false });
   const state = useGameStore();
   const schoolPhoneUnlocked = state.progress.choices['school-phone'] === 'unlocked';
+  const phoneClues = state.progress.phaseClues['cenario-02'] ?? [];
+  const phoneCluesReady = ['bolsa-caderno', 'redacao-futuro', 'relogio-aula'].every(id => phoneClues.includes(id));
   const preferences = usePreferences();
   const isField = sceneKey === 'cenario-08';
   const sceneIndex = backgrounds.findIndex(background => background.key === sceneKey);
   const background = backgrounds[sceneIndex] ?? backgrounds[0];
-  const blocked = gameIntro || !!puzzleScene || pauseOpen || journalOpen || memoryOpen || endingOpen || challengeOpen || schoolPhoneOpen || schoolChoiceOpen || facultyChoiceOpen || !!flashbackKind || !!transition || !!state.inspecting;
+  useEffect(() => { setObjectiveExpanded(true); }, [sceneKey]);
+  useEffect(() => { setObjectiveExpanded(true); }, [sceneKey]);
+  const blocked = gameIntro || !!puzzleScene || pauseOpen || journalOpen || memoryOpen || endingOpen || challengeOpen || schoolPhoneOpen || schoolNotebookOpen || schoolWorkOpen || chairMarkOpen || classroomCubbiesOpen || schoolChoiceOpen || !!flashbackKind || !!transition || !!state.inspecting;
+  gamepadContext.current = { started, blocked, sleepActive, pauseOpen, transition, isField };
+  useEffect(() => {
+    let frame = 0;
+    let previous: boolean[] = [];
+    let lastPadName = '';
+    let lastDirection = '';
+    let nextNavigation = 0;
+    let lastFrameTime = 0;
+    let gamepadFocused: HTMLElement | null = null;
+    const controls = () => {
+      const root = document.querySelector('dialog[open], .drowsiness-event, .game-intro, .cover-intro, .main-menu') ?? document;
+      return Array.from(root.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), select:not([disabled])'))
+        .filter(item => item.getClientRects().length > 0);
+    };
+    const focusElement = (target: HTMLElement) => {
+      gamepadFocused?.classList.remove('gamepad-focused');
+      target.focus(); target.classList.add('gamepad-focused'); gamepadFocused = target;
+    };
+    const focusNext = (step: number) => {
+      const items = controls();
+      if (!items.length) return;
+      const index = items.indexOf(document.activeElement as HTMLElement);
+      const target = items[index < 0 ? step < 0 ? items.length - 1 : 0 : (index + step + items.length) % items.length];
+      focusElement(target);
+    };
+    const moveKeypad = (direction: 'up' | 'down' | 'left' | 'right') => {
+      const keypad = (document.activeElement as HTMLElement)?.closest<HTMLElement>('.numeric-keypad');
+      if (!keypad) return false;
+      const keys = Array.from(keypad.querySelectorAll<HTMLButtonElement>('button'));
+      const index = keys.indexOf(document.activeElement as HTMLButtonElement);
+      if (index < 0) return false;
+      const row = Math.floor(index / 3), column = index % 3;
+      const nextRow = row + (direction === 'down' ? 1 : direction === 'up' ? -1 : 0);
+      const nextColumn = column + (direction === 'right' ? 1 : direction === 'left' ? -1 : 0);
+      if (nextRow >= 0 && nextRow < 4 && nextColumn >= 0 && nextColumn < 3) focusElement(keys[nextRow * 3 + nextColumn]);
+      else if (direction === 'up' || direction === 'down') {
+        const items = controls();
+        const boundary = direction === 'up' ? keys[0] : keys[keys.length - 1];
+        const target = items[items.indexOf(boundary) + (direction === 'up' ? -1 : 1)];
+        if (target) focusElement(target);
+      }
+      return true;
+    };
+    const adjustOrFocus = (step: number) => {
+      const focused = document.activeElement;
+      if (focused instanceof HTMLInputElement && focused.type === 'range') {
+        const min = Number(focused.min || 0), max = Number(focused.max || 100), increment = Number(focused.step || 1);
+        const value = Math.max(min, Math.min(max, Number(focused.value) + step * increment));
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(focused, String(value));
+        focused.dispatchEvent(new Event('input', { bubbles: true }));
+      } else if (focused instanceof HTMLSelectElement) {
+        focused.selectedIndex = Math.max(0, Math.min(focused.options.length - 1, focused.selectedIndex + step));
+        focused.dispatchEvent(new Event('change', { bubbles: true }));
+      } else focusNext(step);
+    };
+    const activate = () => {
+      const items = controls();
+      const focused = document.activeElement as HTMLElement;
+      const target = items.includes(focused) ? focused : items[0];
+      if (target) { gamepadFocused?.classList.remove('gamepad-focused'); target.focus(); target.classList.add('gamepad-focused'); gamepadFocused = target; if (!(target instanceof HTMLSelectElement) && !(target instanceof HTMLInputElement && target.type === 'range')) target.click(); }
+    };
+    const back = () => {
+      const items = controls();
+      const target = items.find(item => /^←?\s*voltar/i.test(item.textContent?.trim() ?? ''))
+        ?? items.find(item => /^(fechar|retomar|cancelar)/i.test(item.textContent?.trim() ?? ''));
+      target?.click();
+    };
+    const clickAtCursor = () => {
+      const { x, y } = cursorPosition.current;
+      const element = document.elementFromPoint(x, y) as HTMLElement | null;
+      if (!element) return;
+      gamepadFocused?.classList.remove('gamepad-focused');
+      gamepadFocused = null;
+      const control = element.closest<HTMLElement>('button, input, select, a, [role="button"]');
+      if (control?.matches(':disabled')) return;
+      if (control instanceof HTMLInputElement && control.type === 'range') {
+        const bounds = control.getBoundingClientRect();
+        const min = Number(control.min || 0), max = Number(control.max || 100);
+        const value = min + Math.max(0, Math.min(1, (x - bounds.left) / bounds.width)) * (max - min);
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(control, String(value));
+        control.dispatchEvent(new Event('input', { bubbles: true }));
+      } else if (control) { control.focus(); control.click(); }
+      else if (element.closest('.game-canvas')) {
+        window.dispatchEvent(new CustomEvent('was:gamepad-pointer-click', { detail: { clientX: x, clientY: y } }));
+      } else {
+        const init = { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 1, pointerType: 'mouse', isPrimary: true };
+        element.dispatchEvent(new PointerEvent('pointerdown', init));
+        element.dispatchEvent(new PointerEvent('pointerup', init));
+      }
+    };
+    const tick = (time: number) => {
+      try {
+      const pad = connectedGamepad();
+      const name = pad?.id ?? '';
+      if (name !== lastPadName) { setGamepadName(name); if (name && !lastPadName) setGamepadHint(true); lastPadName = name; }
+      const context = gamepadContext.current;
+      const playing = context.started && !context.blocked && !context.sleepActive && !context.isField;
+      if (pad && !document.hidden) {
+        const held = (index: number) => !!pad.buttons[index]?.pressed;
+        const pressed = (index: number) => held(index) && !previous[index];
+        if (pressed(17)) {
+          cursorEnabledRef.current = !cursorEnabledRef.current;
+          gamepadStatus.cursorEnabled = cursorEnabledRef.current;
+          setCursorEnabled(cursorEnabledRef.current);
+          if (cursorEnabledRef.current && !cursorPosition.current.x) cursorPosition.current = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+        }
+        if (cursorEnabledRef.current) {
+          const seconds = Math.min(.05, Math.max(0, (time - (lastFrameTime || time)) / 1000));
+          const axis = (value: number) => Math.abs(value) < .17 ? 0 : value;
+          cursorPosition.current.x = Math.max(4, Math.min(window.innerWidth - 4, cursorPosition.current.x + axis(pad.axes[2] ?? 0) * 800 * seconds));
+          cursorPosition.current.y = Math.max(4, Math.min(window.innerHeight - 4, cursorPosition.current.y + axis(pad.axes[3] ?? 0) * 800 * seconds));
+          if (gamepadCursor.current) gamepadCursor.current.style.transform = `translate3d(${cursorPosition.current.x}px,${cursorPosition.current.y}px,0)`;
+        }
+        if (pressed(9) && context.started) {
+          if (context.pauseOpen) setPauseOpen(false);
+          else if (!context.blocked && !context.sleepActive) { setTab('main'); setPauseOpen(true); }
+        }
+        if (pressed(3) && playing && !context.transition) { useGameStore.getState().readJournal(); setJournalOpen(true); }
+        if (pressed(0)) {
+          const focused = document.activeElement as HTMLElement;
+          const selectedByDpad = !playing && focused?.classList.contains('gamepad-focused') && controls().includes(focused);
+          if (selectedByDpad) activate();
+          else if (cursorEnabledRef.current) clickAtCursor();
+          else if (playing) window.dispatchEvent(new Event('was:interact'));
+          else activate();
+        }
+        if (pressed(1)) back();
+        if (!playing) {
+          const direction = held(12) || (pad.axes[1] ?? 0) < -.6 ? 'up'
+            : held(13) || (pad.axes[1] ?? 0) > .6 ? 'down'
+            : held(14) || (pad.axes[0] ?? 0) < -.6 ? 'left'
+            : held(15) || (pad.axes[0] ?? 0) > .6 ? 'right' : '';
+          if (direction && (direction !== lastDirection || time >= nextNavigation)) {
+            if (!moveKeypad(direction)) {
+              if (direction === 'left' || direction === 'right') adjustOrFocus(direction === 'left' ? -1 : 1);
+              else focusNext(direction === 'up' ? -1 : 1);
+            }
+            nextNavigation = time + 230;
+          }
+          lastDirection = direction;
+        } else lastDirection = '';
+        previous = pad.buttons.map(button => button.pressed);
+      } else {
+        previous = [];
+        if (!pad && cursorEnabledRef.current) { cursorEnabledRef.current = false; gamepadStatus.cursorEnabled = false; setCursorEnabled(false); }
+      }
+      lastFrameTime = time;
+      } finally { frame = window.requestAnimationFrame(tick); }
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => { window.cancelAnimationFrame(frame); gamepadFocused?.classList.remove('gamepad-focused'); gamepadStatus.cursorEnabled = false; };
+  }, []);
+  useEffect(() => {
+    if (!gamepadHint) return;
+    const timeout = window.setTimeout(() => setGamepadHint(false), 6500);
+    return () => window.clearTimeout(timeout);
+  }, [gamepadHint]);
+  useEffect(() => { if (started && gamepadName) setGamepadHint(true); }, [started, gamepadName]);
   useEffect(() => { useGameStore.getState().setPaused(!started || blocked || sleepActive); }, [started, blocked, sleepActive]);
   useEffect(() => {
     const doorReached = () => {
@@ -72,9 +251,43 @@ export function App() {
     return () => window.removeEventListener('was:door-flashback', doorReached);
   }, []);
   useEffect(() => {
+    const classroomDoorReached = () => {
+      if (sceneKey !== 'infancia-corredor' || (!admin && !canCompletePhase(useGameStore.getState().progress, sceneKey))) return;
+      if (!admin) useGameStore.getState().advancePhase(backgrounds[2].phase);
+      setTransition(backgrounds[2].key);
+    };
+    window.addEventListener('was:classroom-door', classroomDoorReached);
+    return () => window.removeEventListener('was:classroom-door', classroomDoorReached);
+  }, [sceneKey, admin]);
+  useEffect(() => {
     const openPhone = () => { if (sceneKey === 'cenario-02') setSchoolPhoneOpen(true); };
     window.addEventListener('was:school-phone', openPhone);
     return () => window.removeEventListener('was:school-phone', openPhone);
+  }, [sceneKey]);
+  useEffect(() => {
+    const openNotebook = () => {
+      if (sceneKey !== 'cenario-02') return;
+      const store = useGameStore.getState();
+      if (!store.progress.phaseClues['cenario-02']?.includes('bolsa-caderno')) { store.collectPhaseClue('cenario-02', 'bolsa-caderno'); gameAudio.cue('clue'); }
+      setSchoolNotebookOpen(true);
+    };
+    window.addEventListener('was:school-notebook', openNotebook);
+    return () => window.removeEventListener('was:school-notebook', openNotebook);
+  }, [sceneKey]);
+  useEffect(() => {
+    const openWork = () => { if (sceneKey === 'infancia-sala') setSchoolWorkOpen(true); };
+    window.addEventListener('was:school-work', openWork);
+    return () => window.removeEventListener('was:school-work', openWork);
+  }, [sceneKey]);
+  useEffect(() => {
+    const openChair = () => { if (sceneKey === 'infancia-sala') setChairMarkOpen(true); };
+    window.addEventListener('was:chair-mark', openChair);
+    return () => window.removeEventListener('was:chair-mark', openChair);
+  }, [sceneKey]);
+  useEffect(() => {
+    const openCubbies = () => { if (sceneKey === 'infancia-sala') setClassroomCubbiesOpen(true); };
+    window.addEventListener('was:classroom-cubbies', openCubbies);
+    return () => window.removeEventListener('was:classroom-cubbies', openCubbies);
   }, [sceneKey]);
   useEffect(() => { gameAudio.setVolume(preferences.muted ? 0 : preferences.volume); }, [preferences.volume, preferences.muted]);
   useEffect(() => { gameAudio.setActive(started && !blocked && !document.hidden, sceneKey); }, [started, blocked, sceneKey]);
@@ -123,7 +336,8 @@ export function App() {
   function phaseFlashback(key: string): FlashbackKind | undefined {
     if (key === 'infancia-sala') return 'childhood';
     if (key === 'cenario-02') return 'school';
-    if (key === 'faculdade-laboratorio') return 'friend';
+    if (key === 'cenario-03') return 'relationship';
+    if (key === 'cenario-04') return 'photos';
     if (key === 'cenario-06') return 'father';
     if (key === 'cenario-07') return 'hospital';
     return undefined;
@@ -137,13 +351,14 @@ export function App() {
     const objective = phaseObjectives.find(item => item.scene === sceneKey);
     if (objective && !canCompletePhase(state.progress, sceneKey)) { state.notify('Investigue os detalhes deste ambiente antes de avançar.'); return; }
     state.inspect(null); setPauseOpen(false);
-    if (target.phase === backgrounds[sceneIndex].phase) { state.advancePhase(target.phase); setTransition(key); return; }
     if (!puzzlesComplete(sceneKey, useGameStore.getState().progress.choices)) { setPuzzleScene(sceneKey); return; }
     const memory = phaseFlashback(sceneKey);
     if (memory) { setFlashbackTarget(key); setFlashbackKind(memory); return; }
+    if (target.phase === backgrounds[sceneIndex].phase) { state.advancePhase(target.phase); setTransition(key); return; }
     state.advancePhase(target.phase); setTransition(key);
   }
   function finishFlashback() {
+    if (flashbackKind === 'field') { setFlashbackKind(null); setEndingChoice('question'); setEndingOpen(true); return; }
     const target = flashbackTarget; setFlashbackKind(null); setFlashbackTarget(null);
     const background = backgrounds.find(item => item.key === target);
     if (background) { state.advancePhase(background.phase); setTransition(background.key); }
@@ -160,7 +375,6 @@ export function App() {
       if (!schoolPhoneUnlocked) { setSchoolPhoneOpen(true); return; }
       setSchoolChoiceOpen(true); return;
     }
-    if (sceneKey === 'faculdade-laboratorio') { setFacultyChoiceOpen(true); return; }
     if (sceneKey === 'cenario-05') { setChallengeOpen(true); return; }
     if (sceneKey === 'cenario-07') { continueAfterPhase(); return; }
     continueAfterPhase();
@@ -175,8 +389,9 @@ export function App() {
     if (next) { setFlashbackTarget(next.key); setFlashbackKind(kind); }
   }
   function unlockSchoolPhone() {
-    if (schoolPassword.replace(/\D/g, '') !== '17091990') { state.notify('A senha não funcionou. Confira a data anotada no caderno.'); return; }
-    useGameStore.getState().recordChoice('school-phone', 'unlocked'); setSchoolPassword(''); state.notify('Celular desbloqueado. Procure na bancada da frente o envelope com a etiqueta do armário de Zoe.');
+    if (!phoneCluesReady) { setSchoolPasswordError('Olhe o caderno na bolsa para reunir as pistas.'); return; }
+    if (schoolPassword.replace(/\D/g, '') !== '17091990') { setSchoolPasswordError('A senha não funcionou. Releia o bilhete no caderno.'); return; }
+    useGameStore.getState().recordChoice('school-phone', 'unlocked'); setSchoolPassword(''); setSchoolPasswordError(''); state.notify('Celular desbloqueado. Procure na bancada da frente o envelope com a etiqueta do armário de Zoe.');
   }
   function finishApartmentRecording() {
     setChallengeOpen(false);
@@ -186,9 +401,7 @@ export function App() {
   function openJournal() { state.readJournal(); setJournalOpen(true); }
   function memory() { setJournalOpen(false); if (!puzzlesComplete('infancia', useGameStore.getState().progress.choices)) { setPuzzleScene('infancia'); return; } setMemoryOpen(true); }
   function finishMemory() {
-    const firstViewing = !state.session.memoryWatched;
     state.finishMemory(); setMemoryOpen(false);
-    if (firstViewing && sceneKey === 'infancia') window.dispatchEvent(new Event('was:exit-door'));
   }
   function menu() { setGameIntro(false); state.setPaused(true); state.inspect(null); setPauseOpen(false); setJournalOpen(false); setMemoryOpen(false); setStarted(false); }
   function fullscreen() {
@@ -200,36 +413,38 @@ export function App() {
   const phaseFound = phaseObjective ? state.progress.phaseClues[sceneKey]?.length ?? 0 : 0;
   const phaseReady = !!phaseObjective && canCompletePhase(state.progress, sceneKey);
   const nextScene = backgrounds[sceneIndex + 1];
-  const nextName = nextScene?.title.replace(/^\d+ — /, '') ?? 'Campo';
   const hasPuzzle = !puzzlesComplete(sceneKey, state.progress.choices);
   const samePhase = nextScene?.phase === background.phase;
-  const actionText = hasPuzzle ? 'Reconstruir as pistas' : samePhase ? 'Entrar em ' + nextName : 'Continuar a lembrança';
+  const actionText = hasPuzzle ? 'Reconstruir as pistas' : 'Continuar a lembrança';
   const objectiveText = sceneKey === 'infancia'
-    ? state.session.memoryWatched ? 'Vá até a porta do quarto para sair.' : ready || state.progress.memoryRecovered ? 'Abra o diário e reconstrua a lembrança.' : 'Investigue os objetos com E e reúna as três pistas no diário.'
-    : phaseReady ? hasPuzzle ? 'As pistas estão reunidas. Resolva o puzzle para continuar.' : samePhase ? 'Área explorada. Siga para ' + nextName + '.' : 'Conclua a lembrança. Após o storyboard, você seguirá para ' + nextName + '.'
-    : sceneKey === 'infancia-corredor' ? 'Caminhe da janela até a porta à direita, passando pelo mural. ' + phaseFound + '/3 lembranças.'
-    : (tasks[sceneKey] ?? phaseObjective?.thought ?? '') + ' Investigue com E. ' + phaseFound + '/' + (phaseObjective?.clues.length ?? 0) + ' pistas.';
+    ? state.session.memoryWatched ? 'Sair pela porta. Caminhe até ela e clique para continuar.' : ready || state.progress.memoryRecovered ? 'Abra o diário e reconstrua a lembrança.' : 'Investigue os objetos com E e reúna as três pistas no diário.'
+    : sceneKey === 'infancia-corredor' ? phaseReady ? 'Entrar na sala de aula. Aproxime-se e clique na porta.' : 'Caminhe da janela até a porta à direita, passando pelo mural. ' + phaseFound + '/3 lembranças.'
+    : phaseReady ? hasPuzzle ? 'As pistas estão reunidas. Resolva o puzzle para continuar.' : samePhase ? 'Área explorada. Continue quando estiver pronto.' : 'Conclua a lembrança para continuar.'
+    : (tasks[sceneKey] ?? phaseObjective?.thought ?? '') + ' Investigue com E. ' + phaseFound + '/' + (phaseObjective?.clues.length ?? 0) + ' pistas.' + (phaseObjective && phaseFound === phaseObjective.clues.length - 1 ? ' Falta uma pista; confira os fragmentos no diário.' : '');
   return <main className={`was-app ${preferences.largeText ? 'large-text' : ''} ${preferences.reducedMotion ? 'reduced-motion' : ''}`}>
     <MusicPlayer scene={!started ? 'menu' : flashbackKind || memoryOpen || endingOpen ? 'flashbacks_final' : sceneKey} suspended={gameIntro} />
     {!started ? <MainMenu completed={completed} slots={state.slots} onStart={slot => enter(false, true, slot)} onContinue={slot => enter(false, false, slot)} onAdmin={scene => enter(true, false, undefined, scene)}/> :
       <section className="game-shell" aria-label="Exploração do WAS">
-        {isField ? <FieldFinale paused={blocked} onPause={() => { setTab('main'); setPauseOpen(true); }} onFinish={() => { setEndingChoice('question'); setEndingOpen(true); }}/> : <><Suspense fallback={<div className="scene-loading" role="status">Preparando cenário…</div>}><Game key={run} sceneKey={sceneKey}/></Suspense>
+        {isField ? <FieldFinale paused={blocked} onPause={() => { setTab('main'); setPauseOpen(true); }} onFinish={() => { if (puzzlesComplete('cenario-08', useGameStore.getState().progress.choices)) setFlashbackKind('field'); else setPuzzleScene('cenario-08'); }}/> : <><Suspense fallback={<div className="scene-loading" role="status">Preparando cenário…</div>}><Game key={run} sceneKey={sceneKey}/></Suspense>
         {!['infancia', 'cenario-05', 'cenario-06'].includes(sceneKey) && <div className="game-vignette" aria-hidden="true"/>}
         <header className="game-hud">
           <div className="hud-location"><span className="eyebrow">{admin ? 'ADMIN · EXPLORAÇÃO' : `FASE ${background.phase + 1} · ${phaseObjective?.title ?? 'LEMBRANÇA'}`}</span><h1>{background.title.replace(/^\d+ — /, '')}</h1></div>
-          <nav aria-label="Ações durante o jogo"><button className="hud-button" onClick={openJournal}>Diário {state.unread > 0 && <b className="unread-count" aria-label={`${state.unread} pistas novas`}>{state.unread}</b>}<kbd>J</kbd></button><button className="hud-button" onClick={() => { setTab('main'); setPauseOpen(true); }}>Pausa <kbd>Esc</kbd></button></nav>
+          <nav aria-label="Ações durante o jogo"><button className="hud-button" onClick={openJournal}>Diário {state.unread > 0 && <b className="unread-count" aria-label={`${state.unread} pistas novas`}>{state.unread}</b>}<kbd>J / △</kbd></button><button className="hud-button" onClick={() => { setTab('main'); setPauseOpen(true); }}>Pausa <kbd>Esc / Options</kbd></button></nav>
         </header>
         <div className="hud-bottom">
-          <section className="objective" aria-label="Objetivo atual">
-            <strong>Objetivo · {phaseObjective?.title ?? 'Recuperar a primeira lembrança'}</strong>
-            <p>{objectiveText}</p>
-            {!admin && phaseReady && <button className="objective-action" onClick={advanceCurrentPhase}>{actionText}</button>}
-            {sceneKey === 'infancia' && state.session.memoryWatched && <button className="objective-action" onClick={() => window.dispatchEvent(new Event('was:exit-door'))}>Sair pela porta do quarto</button>}
-            {sceneKey === 'infancia' && (ready || (state.progress.memoryRecovered && !state.session.memoryWatched)) && <button className="objective-action" onClick={openJournal}>Abrir diário</button>}
+          <section className={`objective${objectiveExpanded ? ' objective-expanded' : ''}`} aria-label="Objetivo atual">
+            <button className="objective-toggle" aria-label={objectiveExpanded ? 'Recolher objetivo' : 'Expandir objetivo'} aria-expanded={objectiveExpanded} onClick={() => setObjectiveExpanded(value => !value)}>
+              {objectiveExpanded ? <><strong>Objetivo · {phaseObjective?.title ?? 'Recuperar a primeira lembrança'}</strong><span className="objective-chevron" aria-hidden="true">⌄</span></> : <span className="objective-compact-icon" aria-hidden="true"><svg viewBox="0 0 32 32" focusable="false"><path d="M15.8 6.3c-1.4-2.1-4.5-2.3-6-.3-2.7-.3-4.7 2-4.1 4.6-2.1 1.7-1.9 4.9.3 6.3-1 2.6.6 5.4 3.4 5.7.7 2.4 3.7 3.3 5.7 1.7l.7-.7V7.2l-.7-.9Zm.4 0c1.4-2.1 4.5-2.3 6-.3 2.7-.3 4.7 2 4.1 4.6 2.1 1.7 1.9 4.9-.3 6.3 1 2.6-.6 5.4-3.4 5.7-.7 2.4-3.7 3.3-5.7 1.7l-.7-.7V7.2l.7-.9Z"/><path d="M10 11.2c1.5.2 2.4 1.2 2.5 2.6m-3.4 4.4c1.8-.2 2.8-1.1 3.1-2.6m9.8-4.4c-1.5.2-2.4 1.2-2.5 2.6m3.4 4.4c-1.8-.2-2.8-1.1-3.1-2.6"/></svg></span>}
+            </button>
+            <div className="objective-details">
+              <p>{objectiveText}</p>
+              {!admin && phaseReady && sceneKey !== 'infancia-corredor' && <button className="objective-action" onClick={advanceCurrentPhase}>{actionText}</button>}
+              {sceneKey === 'infancia' && (ready || (state.progress.memoryRecovered && !state.session.memoryWatched)) && <button className="objective-action" onClick={openJournal}>Abrir diário</button>}
+            </div>
           </section>
-          {preferences.showHints && <div className="hud-status"><p><kbd>WASD</kbd> / setas · mover <span>·</span> <kbd>E</kbd> investigar</p></div>}
         </div>
         {state.notice && <p className="game-toast" role="status">{state.notice}</p>}
+        {gamepadHint && gamepadName && <p className="gamepad-hint" role="status">Controle conectado <span>× Investigar · △ Diário · Options Pausa</span></p>}
         <div className="touch-controls" aria-label="Controles de toque"><div className="direction-pad">{[{ label: 'Cima', x: 0, y: -1, icon: '↑' }, { label: 'Esquerda', x: -1, y: 0, icon: '←' }, { label: 'Baixo', x: 0, y: 1, icon: '↓' }, { label: 'Direita', x: 1, y: 0, icon: '→' }].map(direction => <button key={direction.label} aria-label={`Andar para ${direction.label.toLowerCase()}`} className={`direction-${direction.label.toLowerCase()}`} disabled={blocked || sleepActive} onPointerDown={event => { event.currentTarget.setPointerCapture(event.pointerId); state.setTouch({ x: direction.x, y: direction.y }); }} onPointerUp={() => state.setTouch({ x: 0, y: 0 })} onPointerCancel={() => state.setTouch({ x: 0, y: 0 })} onLostPointerCapture={() => state.setTouch({ x: 0, y: 0 })}>{direction.icon}</button>)}</div><button className="touch-interact" disabled={blocked || sleepActive} onClick={() => window.dispatchEvent(new Event('was:interact'))}>Investigar</button></div>
         <DrowsinessEvent key={run} enabled={!blocked} onActive={setSleepActive} onRestart={() => { setEndingOpen(false); setChallengeOpen(false); setTransition(null); enter(false, true); }}/>
         </>}{transition && <div className="scene-transition" role="status"><span className="eyebrow">WAS</span><p>{backgrounds.find(item => item.key === transition)?.title}</p></div>}
@@ -237,18 +452,28 @@ export function App() {
     {started && gameIntro && <IntroVideo onFinish={() => setGameIntro(false)}/>}
     <Modal open={started && pauseOpen} title="Jogo pausado" onClose={() => setPauseOpen(false)} className="pause-dialog">
       <div className="inspection-heading"><div><p className="eyebrow">WAS</p><h2>{tab === 'preferences' ? 'Preferências' : tab === 'controls' ? 'Como explorar' : tab === 'admin' ? 'Explorar cenários' : 'Pausa'}</h2></div><button className="secondary" onClick={() => setPauseOpen(false)}>Retomar</button></div>
-      {tab === 'main' ? <><p className="note">Seu progresso permanece salvo. Explore no seu ritmo.</p><nav className="pause-actions" aria-label="Opções de pausa"><button onClick={() => setPauseOpen(false)}>Continuar</button><button className="secondary" onClick={() => setTab('preferences')}>Preferências</button><button className="secondary" onClick={() => setTab('controls')}>Controles e ajuda</button>{document.fullscreenEnabled && <button className="secondary" onClick={fullscreen}>Alternar tela cheia</button>}{admin && <button className="secondary" onClick={() => setTab('admin')}>Escolher cenário</button>}<button className="secondary" onClick={menu}>Salvar e voltar ao menu</button></nav></> : tab === 'preferences' ? <Preferences/> : tab === 'controls' ? <div className="control-guide"><p><kbd>WASD</kbd> ou setas: caminhar. <kbd>E</kbd>: investigar o objeto próximo. <kbd>J</kbd>: diário. <kbd>Esc</kbd>: pausa ou fechar janela.</p><p>Aproxime-se de um objeto e clique nele ou pressione E. Na inspeção, arraste para girar e procure detalhes. Use “Preciso de uma pista” quando quiser ajuda.</p><p>Registre as três pistas e relacione-as no diário para reconstruir a lembrança. Durante a exploração, Oliver pode sentir sono. Quando a tela escurecer, pressione E repetidamente para recuperar o fôlego. Se adormecer, a tentativa termina e você pode reiniciar a história.</p></div> : <section className="admin-controls"><p className="note">Acesso administrativo · escolha qualquer fase para abrir diretamente.</p><div className="admin-phase-grid" aria-label="Navegar entre fases">{backgrounds.map((item, index) => <button key={item.key} aria-current={sceneKey === item.key ? 'page' : undefined} className={sceneKey === item.key ? 'admin-phase-current' : 'secondary'} onClick={() => visitScene(item.key)}><span>0{index + 1}</span>{item.title.replace(/^\d+ — /, '')}</button>)}</div>{sceneKey === 'infancia' && <div className="rotation-controls">{childhoodObjects.map(object => <button className="secondary" key={object.id} onClick={() => { setPauseOpen(false); state.inspect(object.id); }}>{object.name}</button>)}</div>}</section>}
+      {tab === 'main' ? <><p className="note">Seu progresso permanece salvo. Explore no seu ritmo.</p><nav className="pause-actions" aria-label="Opções de pausa"><button onClick={() => setPauseOpen(false)}>Continuar</button><button className="secondary" onClick={() => setTab('preferences')}>Preferências</button><button className="secondary" onClick={() => setTab('controls')}>Controles e ajuda</button>{document.fullscreenEnabled && <button className="secondary" onClick={fullscreen}>Alternar tela cheia</button>}{admin && <button className="secondary" onClick={() => setTab('admin')}>Escolher cenário</button>}<button className="secondary" onClick={menu}>Salvar e voltar ao menu</button></nav></> : tab === 'preferences' ? <Preferences/> : tab === 'controls' ? <div className="control-guide"><p><kbd>WASD</kbd> ou setas: caminhar. <kbd>E</kbd>: investigar o objeto próximo. <kbd>J</kbd>: diário. <kbd>Esc</kbd>: pausa ou fechar janela.</p><p>Aproxime-se de um objeto e clique nele ou pressione E. Na inspeção, arraste para girar e procure detalhes. Use “Preciso de uma pista” quando quiser ajuda.</p><p>Registre as três pistas e relacione-as no diário para reconstruir a lembrança. Durante a exploração, Oliver pode sentir sono. Quando a tela escurecer, pressione E repetidamente para recuperar o fôlego. Se adormecer, a tentativa termina e você pode reiniciar a história.</p></div> : <section className="admin-controls"><p className="note">Acesso administrativo · escolha qualquer fase para abrir diretamente.</p><div className="admin-phase-grid" aria-label="Navegar entre fases">{backgrounds.map(item => <button key={item.key} aria-current={sceneKey === item.key ? 'page' : undefined} className={sceneKey === item.key ? 'admin-phase-current' : 'secondary'} onClick={() => visitScene(item.key)}><span>{item.title.slice(0, 2)}</span>{item.title.replace(/^\d+ — /, '')}</button>)}</div>{sceneKey === 'infancia' && <div className="rotation-controls">{childhoodObjects.map(object => <button className="secondary" key={object.id} onClick={() => { setPauseOpen(false); state.inspect(object.id); }}>{object.name}</button>)}</div>}</section>}
+      {tab === 'controls' && <div className="control-guide"><p><strong>Controle PS4:</strong> analógico esquerdo ou direcional para andar; <kbd>×</kbd> para investigar, selecionar ou respirar; <kbd>△</kbd> para abrir o diário; <kbd>Options</kbd> para pausar; <kbd>○</kbd> para voltar. Nos menus, use cima/baixo para alternar, <kbd>×</kbd> para selecionar e esquerda/direita para ajustar volumes e opções.</p><p><kbd>Touchpad</kbd> liga ou desliga o ponteiro livre. Mova-o com o analógico direito e pressione <kbd>×</kbd> para clicar em botões, opções e objetos.</p><p><strong>Inspeção 3D:</strong> com o ponteiro desligado, o analógico direito gira o objeto; <kbd>L2</kbd> afasta e <kbd>R2</kbd> aproxima. Pressione o touchpad novamente para usar o ponteiro nos botões da inspeção.</p><p role="status">{gamepadName ? `Controle detectado: ${gamepadName}` : 'Controle ainda não detectado pelo navegador. Pressione um botão com esta página ativa.'}</p></div>}
       {tab !== 'main' && <button className="text-button" onClick={() => setTab('main')}>← Voltar à pausa</button>}
     </Modal>
-    {puzzleScene && <PuzzleSequence scene={puzzleScene} onClose={() => setPuzzleScene(null)} onFinish={() => { const solvedScene = puzzleScene; setPuzzleScene(null); if (solvedScene === 'infancia') setMemoryOpen(true); else advanceCurrentPhase(); }}/>}
+    {puzzleScene && <PuzzleSequence scene={puzzleScene} onClose={() => setPuzzleScene(null)} onFinish={() => { const solvedScene = puzzleScene; setPuzzleScene(null); if (solvedScene === 'infancia') setMemoryOpen(true); else if (solvedScene === 'cenario-08') setFlashbackKind('field'); else advanceCurrentPhase(); }}/>}
     <InspectionDialog/>
+    <SchoolWorkDialog open={schoolWorkOpen} onClose={() => setSchoolWorkOpen(false)}/>
+    <SchoolNotebookDialog open={schoolNotebookOpen} onClose={() => setSchoolNotebookOpen(false)}/>
+    <ChairMarkDialog open={chairMarkOpen} onClose={() => setChairMarkOpen(false)}/>
+    <ClassroomCubbiesDialog open={classroomCubbiesOpen} onClose={() => setClassroomCubbiesOpen(false)}/>
     {sceneKey === 'infancia' ? <MemoryJournal open={journalOpen} onClose={() => setJournalOpen(false)} onMemory={memory}/> : <PhaseJournal scene={sceneKey} open={journalOpen} onClose={() => setJournalOpen(false)}/>}
     <Modal open={schoolPhoneOpen} title="Celular de Oliver" onClose={() => setSchoolPhoneOpen(false)} className="journal-dialog">
       <p className="eyebrow">CELULAR ANTIGO · TELA TRINCADA</p><h2>{schoolPhoneUnlocked ? 'Mensagens' : 'Digite a senha'}</h2>
-      {!schoolPhoneUnlocked ? <><p>O caderno dentro da bolsa guarda uma data no formato dia, mês e ano.</p><label className="connection-field">Senha do celular<input autoComplete="off" inputMode="numeric" maxLength={8} value={schoolPassword} onChange={event => setSchoolPassword(event.target.value.replace(/\D/g, '').slice(0, 8))} placeholder="DDMMAAAA"/></label><button onClick={unlockSchoolPhone}>Desbloquear</button></> : <><article className="journal-entry"><h3>Zoe</h3><p>“Você está melhor? Não esquece a marmita e o trabalho, tá?”</p></article><article className="journal-entry"><h3>Michael</h3><p>“Pega uma coisa no armário da Zoe antes de ir embora.”</p></article><div className="actions"><button onClick={() => setSchoolPhoneOpen(false)}>Fechar celular</button></div></>}
+      {!schoolPhoneUnlocked ? <>
+        <p className="note">Olhe o caderno na bolsa para descobrir a senha.</p>
+        <label className="connection-field">Senha do celular<input autoComplete="off" inputMode="numeric" maxLength={8} value={schoolPassword} onChange={event => { setSchoolPassword(event.target.value.replace(/\D/g, '').slice(0, 8)); setSchoolPasswordError(''); }} placeholder="8 dígitos" aria-describedby={schoolPasswordError ? 'school-password-error' : undefined}/></label>
+        <NumericKeypad label="senha do celular" value={schoolPassword} maxLength={8} onChange={value => { setSchoolPassword(value); setSchoolPasswordError(''); }}/>
+        {schoolPasswordError && <p id="school-password-error" role="alert">{schoolPasswordError}</p>}
+        <div className="actions"><button disabled={!phoneCluesReady || schoolPassword.length !== 8} onClick={unlockSchoolPhone}>Desbloquear</button><button className="secondary" onClick={() => setSchoolPhoneOpen(false)}>Voltar à exploração</button></div>
+      </> : <><article className="journal-entry"><h3>Zoe</h3><p>“Você está melhor? Não esquece a marmita e o trabalho, tá?”</p></article><article className="journal-entry"><h3>Michael</h3><p>“Pega uma coisa no armário da Zoe antes de ir embora.”</p></article><div className="actions"><button onClick={() => setSchoolPhoneOpen(false)}>Fechar celular</button></div></>}
     </Modal>
     <Modal open={schoolChoiceOpen} title="A pergunta do pai" onClose={() => setSchoolChoiceOpen(false)} className="journal-dialog"><p className="eyebrow">FLASHBACK · REDAÇÃO ESCOLAR</p><h2>“Você quer mesmo ser médico como eu?”</h2><p>Escolha a resposta de Oliver. Ela muda apenas o tom desta lembrança.</p><div className="pause-actions"><button onClick={() => { setSchoolChoiceOpen(false); finishChoiceFlashback('school', 'quero-ser-medico'); }}>“Quero ser médico como você.”</button><button className="secondary" onClick={() => { setSchoolChoiceOpen(false); finishChoiceFlashback('school', 'nao-sei-ainda'); }}>“Eu ainda não sei.”</button></div></Modal>
-    <Modal open={facultyChoiceOpen} title="Michael pergunta" onClose={() => setFacultyChoiceOpen(false)} className="journal-dialog"><p className="eyebrow">FLASHBACK · FACULDADE</p><h2>Michael pergunta se Oliver lembra de ter passado mal.</h2><div className="pause-actions"><button onClick={() => { setFacultyChoiceOpen(false); finishChoiceFlashback('friend', 'ignorar'); }}>Ignorar a pergunta</button><button className="secondary" onClick={() => { setFacultyChoiceOpen(false); finishChoiceFlashback('friend', 'fingir-bem'); }}>Fingir que está tudo bem</button></div></Modal>
     <Modal open={challengeOpen} title={sceneKey === 'cenario-05' ? 'Gravação no apartamento' : 'Reconstruir a sequência'} onClose={() => setChallengeOpen(false)} className="journal-dialog">
       {sceneKey === 'cenario-05' ? <>
         <p className="eyebrow">NOTEBOOK · GRAVAÇÃO DE CHAMADA</p><h2>Uma conversa com o pai</h2>
@@ -274,6 +499,7 @@ export function App() {
     </Modal>
     <MemorySequence open={memoryOpen} onFinish={finishMemory} onClose={() => setMemoryOpen(false)}/>
     {flashbackKind && <FlashbackSequence kind={flashbackKind} open={true} onFinish={finishFlashback} branch={state.progress.choices[sceneKey]}/>}
+    {cursorEnabled && <div className="gamepad-cursor" ref={gamepadCursor} aria-hidden="true"><svg viewBox="0 0 28 32"><path d="M2 2v25l6-6 5 9 5-3-5-9 9-2L2 2Z"/></svg><span>× clicar</span></div>}
   </main>;
 }
 

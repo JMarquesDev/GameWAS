@@ -5,6 +5,7 @@ import { findWalkPath, floors, isWalkable, moveOnFloor, perspective, type Point 
 import { sceneSize } from '../backgrounds';
 import { useGameStore } from '../store';
 import { gameAudio } from '../audio';
+import { connectedGamepad, movementFromGamepad } from '../gamepad';
 
 export class Exploration {
   readonly oliver: Phaser.GameObjects.Container;
@@ -32,12 +33,18 @@ export class Exploration {
     const frame = () => {
       const size = sceneSize(key);
       camera.setBounds(0, 0, key === 'infancia-corredor' ? size.width * 3 : size.width, size.height);
-      camera.setZoom(Math.max(scene.scale.width / size.width, scene.scale.height / size.height) * 1.01);
-      camera.setDeadzone(scene.scale.width * .09, scene.scale.height * .04);
+      const touch = window.matchMedia('(pointer: coarse)').matches;
+      // Paisagem e desktop cobrem todo o viewport; retrato prioriza a sala inteira.
+      const zoom = touch && scene.scale.height > scene.scale.width
+        ? Math.min(scene.scale.width / size.width, scene.scale.height / size.height)
+        : Math.max(scene.scale.width / size.width, scene.scale.height / size.height) * 1.01;
+      camera.setZoom(zoom);
+      camera.setDeadzone(scene.scale.width / zoom * .09, scene.scale.height / zoom * .04);
     };
     frame();
     // O foco fica entre cabeça e pés; a margem reduz ajustes a cada passo.
-    camera.startFollow(this.oliver, false, usePreferences.getState().reducedMotion ? 1 : 0.075, usePreferences.getState().reducedMotion ? 1 : 0.075, 0, 110 * ratio);
+    // Mantém um pouco mais do cenário acima, sem empurrar os pés para a borda inferior.
+    camera.startFollow(this.oliver, false, usePreferences.getState().reducedMotion ? 1 : 0.075, usePreferences.getState().reducedMotion ? 1 : 0.075, 0, 62 * ratio);
     scene.scale.on('resize', frame);
     const flush = () => useGameStore.getState().checkpoint(this.key, this.foot);
     const unsubscribe = useGameStore.subscribe((state, previous) => { if (state.paused && !previous.paused) flush(); });
@@ -55,6 +62,13 @@ export class Exploration {
     let dy = Number(this.keys.S.isDown || this.keys.DOWN.isDown) - Number(this.keys.W.isDown || this.keys.UP.isDown);
     const touch = useGameStore.getState().touch;
     if (touch.x || touch.y) { dx = touch.x; dy = touch.y; }
+    else {
+      const pad = connectedGamepad();
+      if (pad) {
+        const movement = movementFromGamepad(pad);
+        if (movement.x || movement.y) { dx = movement.x; dy = movement.y; }
+      }
+    }
     if (dx || dy) { this.path = []; this.arrival = undefined; }
     const waypoint = this.path[0];
     if (waypoint) {

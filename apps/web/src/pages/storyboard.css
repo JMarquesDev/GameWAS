@@ -13,4 +13,6 @@
 .memory-strip .past-frame{flex:1;align-self:end;height:75%}
 .memory-strip .past-frame:nth-child(2){height:88%}
 .drawing-piece{display:block;width:clamp(70px,12vw,140px);aspect-ratio:1448 / 3258;margin:auto;background-image:url('/assets/inspection/brain-pencil-v1.png');background-size:300% 100%;background-repeat:no-repeat}
+.evidence-bank .piece-dragging,.evidence-slot.piece-dragging{opacity:0}
+.evidence-slot[draggable=true]{cursor:grab}
 
