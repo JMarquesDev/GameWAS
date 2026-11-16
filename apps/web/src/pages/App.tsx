@@ -7,6 +7,7 @@ import { FieldFinale } from './FieldFinale';
 import { DrowsinessEvent } from './DrowsinessEvent';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { childhoodObjects, phaseObjectives, type FlashbackKind } from '@was/game-content';
+import { puzzles } from '../puzzles/content';
 import { canCompletePhase, canRecoverMemory } from '@was/game-core';
 import { useGameStore } from '../game/store';
 import { backgrounds } from '../game/backgrounds';
@@ -42,6 +43,9 @@ export function App() {
   function completeGame() { if (!admin) { setCompleted(true); try { localStorage.setItem('was:completed:v1', 'true'); } catch { /* Session remains usable. */ } } setEndingOpen(false); menu(); }
   const [puzzleScene, setPuzzleScene] = useState<string | null>(null);
   const [puzzleReplay, setPuzzleReplay] = useState(false);
+  const [adminPuzzleId, setAdminPuzzleId] = useState<string | null>(null);
+  const [adminPreview, setAdminPreview] = useState(false);
+  const [adminTarget, setAdminTarget] = useState<{ scene: string; kind: 'puzzle' | 'dialogue' | 'interaction'; id: string } | null>(null);
   const [objectiveExpanded, setObjectiveExpanded] = useState(true);
   const [sleepActive, setSleepActive] = useState(false);
   const [run, setRun] = useState(0);
@@ -385,6 +389,7 @@ export function App() {
     state.advancePhase(target.phase); setTransition(key);
   }
   function finishFlashback() {
+    if (adminPreview) { setFlashbackKind(null); setAdminPreview(false); return; }
     if (flashbackKind === 'field') { setFlashbackKind(null); setEndingChoice('question'); setEndingOpen(true); return; }
     const target = flashbackTarget; setFlashbackKind(null); setFlashbackTarget(null);
     const background = backgrounds.find(item => item.key === target);
@@ -411,6 +416,7 @@ export function App() {
     setChallengeOpen(false); state.notify('Sequência reconstruída: exames, cirurgia e despertar.'); continueAfterPhase();
   }
   function finishChoiceFlashback(kind: FlashbackKind, choice: string) {
+    if (adminPreview) { setFlashbackKind(kind); return; }
     state.recordChoice(sceneKey, choice);
     const next = backgrounds[sceneIndex + 1];
     if (next) { setFlashbackTarget(next.key); setFlashbackKind(kind); }
@@ -426,6 +432,34 @@ export function App() {
     if (next) { setFlashbackTarget(next.key); setFlashbackKind('apartment'); }
   }
   function openJournal() { state.readJournal(); setJournalOpen(true); }
+  function openAdminItem(kind: 'puzzle' | 'dialogue' | 'interaction', id: string) {
+    setPauseOpen(false); setAdminPreview(true);
+    if (kind === 'puzzle') { const [scene, puzzleId] = id.split(':'); setAdminPuzzleId(puzzleId); setPuzzleReplay(true); setPuzzleScene(scene); return; }
+    if (kind === 'dialogue') { setFlashbackKind(id as FlashbackKind); return; }
+    if (id === 'diary') { openJournal(); return; }
+    if (id === 'phone') { setSchoolPhoneOpen(true); return; }
+    if (id === 'notebook') { setSchoolNotebookOpen(true); return; }
+    if (id === 'work') { setSchoolWorkOpen(true); return; }
+    if (id === 'chair') { setChairMarkOpen(true); return; }
+    if (id === 'cubbies') { setClassroomCubbiesOpen(true); return; }
+    if (id === 'clock-diary') { setClockMode('diary'); return; }
+    if (id === 'clock') { setClockMode('clock'); return; }
+    if (id === 'school-choice') { setSchoolChoiceOpen(true); return; }
+    if (id === 'friend-choice') { setFriendChoiceOpen(true); return; }
+    if (id === 'recording') { setChallengeOpen(true); return; }
+    if (id === 'ending') { setEndingChoice('question'); setEndingOpen(true); return; }
+    state.inspect(id as (typeof childhoodObjects)[number]['id']);
+  }
+  function launchAdminItem(scene: string, kind: 'puzzle' | 'dialogue' | 'interaction', id: string) {
+    if (scene !== sceneKey) { setAdminTarget({ scene, kind, id }); visitScene(scene); return; }
+    openAdminItem(kind, id);
+  }
+  useEffect(() => {
+    if (adminTarget && sceneKey === adminTarget.scene && !transition) {
+      setAdminTarget(null);
+      openAdminItem(adminTarget.kind, adminTarget.id);
+    }
+  }, [adminTarget, sceneKey, transition]);
   function memory() { setJournalOpen(false); if (!puzzlesComplete('infancia', useGameStore.getState().progress.choices)) { setPuzzleScene('infancia'); return; } setMemoryOpen(true); }
   function finishMemory() {
     state.finishMemory(); setMemoryOpen(false);
@@ -454,6 +488,17 @@ export function App() {
     : sceneKey === 'infancia-corredor' ? phaseReady ? 'Entrar na sala de aula. Aproxime-se e clique na porta.' : 'Caminhe da janela até a porta à direita, passando pelo mural. ' + phaseFound + '/3 lembranças.'
     : phaseReady ? hasPuzzle ? 'As pistas estão reunidas. Resolva o puzzle para continuar.' : samePhase ? 'Área explorada. Continue quando estiver pronto.' : 'Conclua a lembrança para continuar.'
     : (tasks[sceneKey] ?? phaseObjective?.thought ?? '') + ' Investigue com E. ' + phaseFound + '/' + (phaseObjective?.clues.length ?? 0) + ' pistas.' + (phaseObjective && phaseFound === phaseObjective.clues.length - 1 ? ' Falta uma pista; confira os fragmentos no diário.' : '');
+  const adminInteractions: Record<string, { label: string; id: string }[]> = {
+    infancia: [...childhoodObjects.map(item => ({ label: item.name, id: item.id })), { label: 'Diário da infância', id: 'diary' }],
+    'infancia-sala': [{ label: 'Cadeira O + Z', id: 'chair' }, { label: 'Armários da turma', id: 'cubbies' }, { label: 'Trabalho guardado', id: 'work' }, { label: 'Escolha do pai', id: 'school-choice' }],
+    'cenario-02': [{ label: 'Celular antigo', id: 'phone' }, { label: 'Caderno', id: 'notebook' }, { label: 'Diário do experimento', id: 'clock-diary' }, { label: 'Relógio', id: 'clock' }, { label: 'Escolha com Michael', id: 'friend-choice' }],
+    'cenario-05': [{ label: 'Gravação do pai', id: 'recording' }],
+    'cenario-08': [{ label: 'Escolha final', id: 'ending' }],
+  };
+  const adminDialogues: Partial<Record<string, FlashbackKind[]>> = {
+    infancia: ['childhood'], 'infancia-sala': ['school'], 'cenario-02': ['friend'], 'cenario-03': ['relationship'], 'cenario-04': ['photos'], 'cenario-05': ['apartment'], 'cenario-06': ['father'], 'cenario-07': ['hospital'], 'cenario-08': ['field'],
+  };
+  const adminPanel = <section className="admin-controls"><p className="note">Acesso administrativo · abra uma fase ou teste uma cena diretamente.</p><h3>Fases</h3><div className="admin-phase-grid" aria-label="Fases">{backgrounds.map(item => <button key={item.key} aria-current={sceneKey === item.key ? 'page' : undefined} className={sceneKey === item.key ? 'admin-phase-current' : 'secondary'} onClick={() => visitScene(item.key)}><span>{item.title.slice(0, 2)}</span>{item.title.replace(/^\d+ — /, '')}</button>)}</div><h3>Cenas, interações e puzzles</h3>{backgrounds.map(item => <details key={item.key} open={sceneKey === item.key}><summary>{item.title}</summary><div className="rotation-controls">{(adminInteractions[item.key] ?? []).map(entry => <button className="secondary" key={entry.id} onClick={() => launchAdminItem(item.key, 'interaction', entry.id)}>{entry.label}</button>)}{(puzzles[item.key] ?? []).map(entry => <button className="secondary" key={entry.id} onClick={() => launchAdminItem(item.key, 'puzzle', `${item.key}:${entry.id}`)}>Puzzle: {entry.title}</button>)}{(adminDialogues[item.key] ?? []).map(kind => <button className="secondary" key={kind} onClick={() => launchAdminItem(item.key, 'dialogue', kind)}>Diálogo: {kind}</button>)}</div></details>)}</section>;
   return <main className={`was-app ${preferences.largeText ? 'large-text' : ''} ${preferences.reducedMotion ? 'reduced-motion' : ''}`}>
     <MusicPlayer scene={!started ? 'menu' : flashbackKind || memoryOpen || endingOpen ? 'flashbacks_final' : sceneKey} suspended={gameIntro} />
     {!started ? <MainMenu completed={completed} slots={state.slots} onStart={slot => enter(false, true, slot)} onContinue={slot => enter(false, false, slot)} onAdmin={scene => enter(true, false, undefined, scene)}/> :
@@ -485,12 +530,12 @@ export function App() {
     {started && gameIntro && <IntroVideo onFinish={() => setGameIntro(false)}/>}
     <Modal open={started && pauseOpen} title="Jogo pausado" onClose={() => setPauseOpen(false)} className="pause-dialog">
       <div className="inspection-heading"><div><p className="eyebrow">WAS</p><h2>{tab === 'preferences' ? 'Preferências' : tab === 'controls' ? 'Como explorar' : tab === 'admin' ? 'Explorar cenários' : 'Pausa'}</h2></div><button className="secondary" onClick={() => setPauseOpen(false)}>Retomar</button></div>
-      {tab === 'main' ? <><p className="note">Seu progresso permanece salvo. Explore no seu ritmo.</p><nav className="pause-actions" aria-label="Opções de pausa"><button onClick={() => setPauseOpen(false)}>Continuar</button><button className="secondary" onClick={() => setTab('preferences')}>Preferências</button><button className="secondary" onClick={() => setTab('controls')}>Controles e ajuda</button>{document.fullscreenEnabled && <button className="secondary" onClick={fullscreen}>Alternar tela cheia</button>}{admin && <button className="secondary" onClick={() => setTab('admin')}>Escolher cenário</button>}<button className="secondary" onClick={menu}>Salvar e voltar ao menu</button></nav></> : tab === 'preferences' ? <Preferences/> : tab === 'controls' ? <div className="control-guide"><p><kbd>WASD</kbd> ou setas: caminhar. <kbd>E</kbd>: investigar o objeto próximo. <kbd>J</kbd>: diário. <kbd>Esc</kbd>: pausa ou fechar janela.</p><p>Aproxime-se de um objeto e clique nele ou pressione E. Na inspeção, arraste para girar e procure detalhes. Use “Preciso de uma pista” quando quiser ajuda.</p><p>Registre as três pistas e relacione-as no diário para reconstruir a lembrança. Durante a exploração, Oliver pode sentir sono. Quando a tela escurecer, pressione E repetidamente para recuperar o fôlego. Se adormecer, a tentativa termina e você pode reiniciar a história.</p></div> : <section className="admin-controls"><p className="note">Acesso administrativo · escolha qualquer fase para abrir diretamente.</p><div className="admin-phase-grid" aria-label="Navegar entre fases">{backgrounds.map(item => <button key={item.key} aria-current={sceneKey === item.key ? 'page' : undefined} className={sceneKey === item.key ? 'admin-phase-current' : 'secondary'} onClick={() => visitScene(item.key)}><span>{item.title.slice(0, 2)}</span>{item.title.replace(/^\d+ — /, '')}</button>)}</div>{sceneKey === 'infancia' && <div className="rotation-controls">{childhoodObjects.map(object => <button className="secondary" key={object.id} onClick={() => { setPauseOpen(false); state.inspect(object.id); }}>{object.name}</button>)}</div>}</section>}
+      {tab === 'main' ? <><p className="note">Seu progresso permanece salvo. Explore no seu ritmo.</p><nav className="pause-actions" aria-label="Opções de pausa"><button onClick={() => setPauseOpen(false)}>Continuar</button><button className="secondary" onClick={() => setTab('preferences')}>Preferências</button><button className="secondary" onClick={() => setTab('controls')}>Controles e ajuda</button>{document.fullscreenEnabled && <button className="secondary" onClick={fullscreen}>Alternar tela cheia</button>}{admin && <button className="secondary" onClick={() => setTab('admin')}>Escolher cenário</button>}<button className="secondary" onClick={menu}>Salvar e voltar ao menu</button></nav></> : tab === 'preferences' ? <Preferences/> : tab === 'controls' ? <div className="control-guide"><p><kbd>WASD</kbd> ou setas: caminhar. <kbd>E</kbd>: investigar o objeto próximo. <kbd>J</kbd>: diário. <kbd>Esc</kbd>: pausa ou fechar janela.</p><p>Aproxime-se de um objeto e clique nele ou pressione E. Na inspeção, arraste para girar e procure detalhes. Use “Preciso de uma pista” quando quiser ajuda.</p><p>Registre as três pistas e relacione-as no diário para reconstruir a lembrança. Durante a exploração, Oliver pode sentir sono. Quando a tela escurecer, pressione E repetidamente para recuperar o fôlego. Se adormecer, a tentativa termina e você pode reiniciar a história.</p></div> : adminPanel}
       {tab === 'controls' && <div className="control-guide"><p><strong>Controle PS4:</strong> analógico esquerdo ou direcional para andar; <kbd>×</kbd> para investigar, selecionar ou respirar; <kbd>△</kbd> para abrir o diário; <kbd>Options</kbd> para pausar; <kbd>○</kbd> para voltar. Nos menus, use cima/baixo para alternar, <kbd>×</kbd> para selecionar e esquerda/direita para ajustar volumes e opções.</p><p><kbd>Touchpad</kbd> liga ou desliga o ponteiro livre. Mova-o com o analógico direito e pressione <kbd>×</kbd> para clicar em botões, opções e objetos.</p><p><strong>Inspeção 3D:</strong> com o ponteiro desligado, o analógico direito gira o objeto; <kbd>L2</kbd> afasta e <kbd>R2</kbd> aproxima. Pressione o touchpad novamente para usar o ponteiro nos botões da inspeção.</p><p role="status">{gamepadName ? `Controle detectado: ${gamepadName}` : 'Controle ainda não detectado pelo navegador. Pressione um botão com esta página ativa.'}</p></div>}
       {tab !== 'main' && <button className="text-button" onClick={() => setTab('main')}>← Voltar à pausa</button>}
     </Modal>
-    {puzzleScene && <PuzzleSequence scene={puzzleScene} replay={puzzleReplay} onClose={() => { setPuzzleScene(null); setPuzzleReplay(false); }} onFinish={() => { const solvedScene = puzzleScene; setPuzzleScene(null); setPuzzleReplay(false); if (solvedScene === 'infancia') setMemoryOpen(true); else if (solvedScene === 'cenario-08') setFlashbackKind('field'); else advanceCurrentPhase(); }}/>}
-    {clockMode && <ClockPuzzle mode={clockMode} onClose={() => setClockMode(null)}/>}
+    {puzzleScene && <PuzzleSequence scene={puzzleScene} replay={puzzleReplay} previewId={adminPuzzleId} onClose={() => { setPuzzleScene(null); setPuzzleReplay(false); setAdminPuzzleId(null); setAdminPreview(false); }} onFinish={() => { const solvedScene = puzzleScene; setPuzzleScene(null); setPuzzleReplay(false); setAdminPuzzleId(null); if (adminPreview) { setAdminPreview(false); return; } if (solvedScene === 'infancia') setMemoryOpen(true); else if (solvedScene === 'cenario-08') setFlashbackKind('field'); else advanceCurrentPhase(); }}/>}
+    {clockMode && <ClockPuzzle mode={clockMode} preview={adminPreview} onClose={() => { setClockMode(null); setAdminPreview(false); }}/>}
     <InspectionDialog/>
     <SchoolWorkDialog open={schoolWorkOpen} onClose={() => setSchoolWorkOpen(false)}/>
     <SchoolNotebookDialog open={schoolNotebookOpen} onClose={() => setSchoolNotebookOpen(false)}/>
@@ -530,7 +575,7 @@ export function App() {
       </>}
     </Modal>
     <Modal open={endingOpen && endingChoice === 'question'} title="Você quer lembrar?" onClose={() => setEndingOpen(false)} className="journal-dialog">
-      <p className="eyebrow">ÚLTIMA ESCOLHA</p><h2>VOCÊ QUER LEMBRAR?</h2><div className="pause-actions"><button onClick={() => { state.recordChoice('ending', 'remember'); setEndingChoice('remember'); }}>Sim, quero lembrar</button><button className="secondary" onClick={() => { state.recordChoice('ending', 'release'); setEndingChoice('release'); }}>Não quero lembrar</button></div>
+      <p className="eyebrow">ÚLTIMA ESCOLHA</p><h2>VOCÊ QUER LEMBRAR?</h2><div className="pause-actions"><button onClick={() => { if (!adminPreview) state.recordChoice('ending', 'remember'); setEndingChoice('remember'); }}>Sim, quero lembrar</button><button className="secondary" onClick={() => { if (!adminPreview) state.recordChoice('ending', 'release'); setEndingChoice('release'); }}>Não quero lembrar</button></div>
     </Modal>
     {endingOpen && endingChoice !== 'question' && <EndingSequence key={endingChoice} choice={endingChoice} onFinish={completeGame}/>}
     <MemorySequence open={memoryOpen} onFinish={finishMemory} onClose={() => setMemoryOpen(false)}/>

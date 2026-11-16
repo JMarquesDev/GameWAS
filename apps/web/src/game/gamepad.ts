@@ -1,10 +1,12 @@
 import type { Point } from './systems/navigation';
+import { usePreferences } from './preferences';
 
 export const gamepadMovement: Point = { x: 0, y: 0 };
 // Mantido para compatibilidade com abas em recarregamento automático do Vite.
 export const gamepadStatus = { connected: false, cursorEnabled: false };
 
 export function connectedGamepad(): Gamepad | undefined {
+  if (!usePreferences.getState().gamepadEnabled) return undefined;
   try {
     return Array.from(navigator.getGamepads?.() ?? []).find(pad => pad?.connected && pad.mapping === 'standard')
       ?? Array.from(navigator.getGamepads?.() ?? []).find(pad => pad?.connected)

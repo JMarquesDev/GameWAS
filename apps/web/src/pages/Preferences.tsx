@@ -1,8 +1,21 @@
 import { usePreferences } from '../game/preferences';
+import { useEffect, useState } from 'react';
+import { connectedGamepad } from '../game/gamepad';
 
 export function Preferences() {
   const preferences = usePreferences();
+  const [controller, setController] = useState('');
+  useEffect(() => {
+    const check = () => setController(connectedGamepad()?.id ?? '');
+    check();
+    const timer = window.setInterval(check, 500);
+    window.addEventListener('gamepadconnected', check);
+    window.addEventListener('gamepaddisconnected', check);
+    return () => { window.clearInterval(timer); window.removeEventListener('gamepadconnected', check); window.removeEventListener('gamepaddisconnected', check); };
+  }, [preferences.gamepadEnabled]);
   return <div className="preferences-fields">
+    <label><input type="checkbox" checked={preferences.gamepadEnabled} onChange={event => preferences.update({ gamepadEnabled: event.target.checked })}/> Usar controle</label>
+    {preferences.gamepadEnabled && <div><p className="note">Conecte um controle compatível ao computador com um cabo USB de dados ou emparelhe pelo Bluetooth nas configurações do computador. Depois, pressione um botão do controle com o jogo aberto para que o navegador o reconheça.</p><p role="status">{controller ? `Controle detectado: ${controller}` : 'Aguardando controle. Conecte-o e pressione um botão.'}</p><button type="button" className="secondary" onClick={() => setController(connectedGamepad()?.id ?? '')}>Verificar conexão</button></div>}
     <label>Velocidade de caminhada <select value={preferences.speed} onChange={event => preferences.update({ speed: Number(event.target.value) })}>
       <option value={140}>Calma</option><option value={180}>Normal</option><option value={230}>Rápida</option>
     </select></label>
