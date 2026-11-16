@@ -18,7 +18,6 @@ export function FieldFinale({ paused, onPause, onCredits, onFinish }: { paused: 
   const [failed, setFailed] = useState(false);
   const [line, setLine] = useState(-1);
   const [silent, setSilent] = useState(false);
-  const [videoEnded, setVideoEnded] = useState(false);
   const complete = line >= narration.length;
 
   useEffect(() => {
@@ -62,7 +61,6 @@ export function FieldFinale({ paused, onPause, onCredits, onFinish }: { paused: 
     <button className="field-pause secondary" onClick={onPause}>Pausa <kbd>Esc</kbd></button>
     {loaded && <button className="field-credits secondary" onClick={onCredits}>Ver créditos</button>}
     {loaded && line >= 0 && !complete && <div className="field-caption" key={line}><p aria-live="polite">{narration[line]}</p>{silent && <small>Narração disponível em legendas neste dispositivo.</small>}</div>}
-    {complete && !videoEnded && <video className="field-final-video" autoPlay muted playsInline src="/assets/video/was-campo-final.mp4" onEnded={() => setVideoEnded(true)} onError={() => setVideoEnded(true)} aria-label="Oliver contempla o campo ao pôr do sol"/>}
-    {complete && videoEnded && <div className="field-complete"><button className="secondary" onClick={onFinish}>Concluir história</button></div>}
+    {complete && <div className="field-complete"><button className="secondary" onClick={onFinish}>Concluir história</button></div>}
   </section>;
 }

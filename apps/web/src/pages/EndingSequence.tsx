@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Modal } from './Modal';
 
 const team = [
@@ -22,9 +22,25 @@ const memories = [
 export function EndingSequence({ choice, onFinish }: { choice: 'remember' | 'release' | 'credits'; onFinish: () => void }) {
   const [step, setStep] = useState(0);
   const [credits, setCredits] = useState(choice === 'credits');
+  const creditsViewport = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const viewport = creditsViewport.current;
+    if (!credits || !viewport) return;
+    let frame = 0;
+    let previous = 0;
+    let position = 0;
+    const scroll = (time: number) => {
+      if (previous) position = Math.min(viewport.scrollHeight - viewport.clientHeight, position + Math.min(time - previous, 50) * 0.025);
+      previous = time;
+      viewport.scrollTop = position;
+      if (position < viewport.scrollHeight - viewport.clientHeight) frame = requestAnimationFrame(scroll);
+    };
+    frame = requestAnimationFrame(scroll);
+    return () => cancelAnimationFrame(frame);
+  }, [credits]);
   const current = memories[step];
   return <Modal open title={credits ? 'Créditos' : choice === 'remember' ? 'Uma vida em lembranças' : 'Deixar partir'} onClose={() => setCredits(true)} className={`ending-sequence ${choice === 'release' && !credits ? 'ending-release' : ''}`}>
-    {credits ? <section className="ending-credits" aria-label="Créditos do WAS"><div className="credits-viewport"><div className="credits-roll"><p className="eyebrow">CRÉDITOS</p><h2>WAS</h2><p>Memórias de Oliver</p><div className="credits-team">{team.map(group => <section key={group.role}><h3>{group.role}</h3><ul>{group.names.map(name => <li key={name}>{name}</li>)}</ul></section>)}</div><p>Obrigado por acompanhar Oliver.</p></div></div><button className="credits-exit" onClick={onFinish}>Voltar ao menu</button></section>
+    {credits ? <section className="ending-credits" aria-label="Créditos do WAS"><div className="credits-viewport" ref={creditsViewport}><div className="credits-roll"><p className="eyebrow">CRÉDITOS</p><h2>WAS</h2><p>Memórias de Oliver</p><div className="credits-team">{team.map(group => <section key={group.role}><h3>{group.role}</h3><ul>{group.names.map(name => <li key={name}>{name}</li>)}</ul></section>)}</div><p>Obrigado por acompanhar Oliver.</p></div></div><button className="credits-exit" onClick={onFinish}>Voltar ao menu</button></section>
       : choice === 'release' ? <section className="ending-content"><button className="secondary" onClick={() => setCredits(true)}>Continuar</button></section>
       : <><img key={current.image} className="ending-art" src={`/assets/backgrounds/${current.image}`} alt=""/><section className="ending-content" key={step}><p className="eyebrow">UMA VIDA EM LEMBRANÇAS · {step + 1}/{memories.length}</p><h2>{current.title}</h2><p aria-live="polite">{current.text}</p><button onClick={() => step === memories.length - 1 ? setCredits(true) : setStep(value => value + 1)}>{step === memories.length - 1 ? 'Ver créditos' : 'Continuar'}</button><button className="text-button" onClick={() => setCredits(true)}>Ir aos créditos</button></section></>}
   </Modal>;
